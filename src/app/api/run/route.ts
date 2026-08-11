@@ -64,9 +64,9 @@ export async function POST(request: Request) {
   } else {
     return NextResponse.json(
       {
-        error:
-          "No replay recording for this ticket, and live mode is not enabled on this deployment. " +
-          "Load one of the example tickets to see a recorded run.",
+        error: config.provider === "anthropic"
+          ? "No replay recording for this ticket. Load one of the example tickets, or enable live model calls to run it for real."
+          : "No replay recording for this ticket, and this deployment does not make live model calls. Load one of the example tickets to see a recorded run.",
       },
       { status: 409 },
     );
