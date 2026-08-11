@@ -44,12 +44,79 @@ export type ExtractionParseResult =
   | { success: false; violations: SchemaViolation[] };
 
 /**
+ * Compared with whitespace collapsed and case ignored.
+ *
+ * The goal is to catch fabricated or paraphrased quotes, not to police
+ * formatting: a quote spanning a line break, or one whose leading letter got
+ * capitalised, is still honestly sourced. Anything looser would stop catching
+ * invention, which is the whole point of the check.
+ */
+function normalizeForQuoteMatch(value: string): string {
+  return value.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+/** The ticket prose a sourceQuote may legitimately be drawn from. */
+export function buildQuotableText(ticket: {
+  title: string;
+  description: string;
+  acceptanceCriteria: string[];
+}): string {
+  return [ticket.title, ticket.description, ...ticket.acceptanceCriteria].join("\n");
+}
+
+/**
+ * Checks that every explicit requirement's sourceQuote really appears in the
+ * ticket.
+ *
+ * This is a semantic rule the schema cannot express — the shape is valid either
+ * way, and only comparison against the source reveals a fabricated citation.
+ * Constrained decoding would not catch it either, which is precisely why the
+ * repair loop needs to exist.
+ */
+function findQuoteViolations(
+  data: ExtractedRequirements,
+  quotableText: string,
+): SchemaViolation[] {
+  const haystack = normalizeForQuoteMatch(quotableText);
+  const violations: SchemaViolation[] = [];
+
+  data.explicitRequirements.forEach((requirement, index) => {
+    if (!requirement.sourceQuote) {
+      violations.push({
+        path: `explicitRequirements.${index}.sourceQuote`,
+        message: "An explicit requirement must cite a sourceQuote from the ticket",
+      });
+      return;
+    }
+    if (!haystack.includes(normalizeForQuoteMatch(requirement.sourceQuote))) {
+      violations.push({
+        path: `explicitRequirements.${index}.sourceQuote`,
+        message: `sourceQuote must be text copied verbatim from the ticket, but "${requirement.sourceQuote}" does not appear in it`,
+      });
+    }
+  });
+
+  data.impliedRequirements.forEach((requirement, index) => {
+    if (requirement.sourceQuote) {
+      violations.push({
+        path: `impliedRequirements.${index}.sourceQuote`,
+        message:
+          "An implied requirement must not cite a sourceQuote — if the ticket states it, it is explicit",
+      });
+    }
+  });
+
+  return violations;
+}
+
+/**
  * Parses raw model text into validated requirements.
  *
- * Handles the two distinct failure modes separately, because the repair prompt
- * differs: text that isn't JSON at all, and JSON that doesn't match the schema.
+ * Three failure modes are reported separately, because the repair prompt
+ * differs for each: text that isn't JSON, JSON of the wrong shape, and
+ * well-shaped JSON whose citations don't hold up against the ticket.
  */
-export function parseExtraction(raw: string): ExtractionParseResult {
+export function parseExtraction(raw: string, quotableText: string): ExtractionParseResult {
   let json: unknown;
   try {
     json = JSON.parse(stripCodeFence(raw));
@@ -61,17 +128,22 @@ export function parseExtraction(raw: string): ExtractionParseResult {
   }
 
   const result = ExtractedRequirementsSchema.safeParse(json);
-  if (result.success) {
-    return { success: true, data: result.data };
+  if (!result.success) {
+    return {
+      success: false,
+      violations: result.error.issues.map((issue) => ({
+        path: issue.path.join(".") || "(root)",
+        message: issue.message,
+      })),
+    };
   }
 
-  return {
-    success: false,
-    violations: result.error.issues.map((issue) => ({
-      path: issue.path.join(".") || "(root)",
-      message: issue.message,
-    })),
-  };
+  const quoteViolations = findQuoteViolations(result.data, quotableText);
+  if (quoteViolations.length > 0) {
+    return { success: false, violations: quoteViolations };
+  }
+
+  return { success: true, data: result.data };
 }
 
 /** Models often wrap JSON in a ```json fence despite instructions not to. */

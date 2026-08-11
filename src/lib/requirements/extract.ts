@@ -13,7 +13,12 @@ import {
   buildRepairPrompt,
   EXTRACTION_SYSTEM_PROMPT,
 } from "./prompt";
-import { parseExtraction, type ExtractedRequirements, type SchemaViolation } from "./schema";
+import {
+  buildQuotableText,
+  parseExtraction,
+  type ExtractedRequirements,
+  type SchemaViolation,
+} from "./schema";
 
 /**
  * Why an attempt ended. Distinguishing these matters for the run report: a
@@ -77,6 +82,10 @@ export async function extractRequirements(
     { role: "user", content: buildExtractionPrompt(ticket) },
   ];
 
+  // Citations are checked against the ticket's own prose, so a quote invented
+  // by the model fails validation the same way a missing field would.
+  const quotableText = buildQuotableText(ticket);
+
   const attempts: ExtractionAttempt[] = [];
   const maxAttempts = maxRepairs + 1;
 
@@ -118,7 +127,7 @@ export async function extractRequirements(
     }
 
     const latencyMs = now() - startedAt;
-    const parsed = parseExtraction(responseText);
+    const parsed = parseExtraction(responseText, quotableText);
     const estimatedCostUsd = estimateCostUsd(provider.model, usage);
 
     if (parsed.success) {
