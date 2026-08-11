@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { SchemaViolation, StructuredParseResult } from "@/lib/llm/structured";
 
 /**
  * Contract for requirement-extraction output.
@@ -34,14 +35,9 @@ export type Requirement = z.infer<typeof RequirementSchema>;
 export type Ambiguity = z.infer<typeof AmbiguitySchema>;
 export type ExtractedRequirements = z.infer<typeof ExtractedRequirementsSchema>;
 
-export interface SchemaViolation {
-  path: string;
-  message: string;
-}
+export type { SchemaViolation } from "@/lib/llm/structured";
 
-export type ExtractionParseResult =
-  | { success: true; data: ExtractedRequirements }
-  | { success: false; violations: SchemaViolation[] };
+export type ExtractionParseResult = StructuredParseResult<ExtractedRequirements>;
 
 /**
  * Compared with whitespace collapsed and case ignored.
@@ -153,6 +149,3 @@ function stripCodeFence(raw: string): string {
   return fenced ? fenced[1] : trimmed;
 }
 
-export function formatViolations(violations: SchemaViolation[]): string {
-  return violations.map((v) => `- ${v.path}: ${v.message}`).join("\n");
-}

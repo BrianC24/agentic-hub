@@ -35,7 +35,7 @@ describe("extractRequirements", () => {
     expect(run.status).toBe("success");
     expect(run.attempts).toHaveLength(1);
     expect(run.attempts[0].outcome).toBe("valid");
-    expect(run.requirements?.summary).toContain("CSV");
+    expect(run.data?.summary).toContain("CSV");
     expect(provider.calls).toBe(1);
   });
 

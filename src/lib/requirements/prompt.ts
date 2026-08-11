@@ -1,5 +1,5 @@
 import type { Ticket } from "@/lib/ticket/schema";
-import { formatViolations, type SchemaViolation } from "./schema";
+import { formatViolations, type SchemaViolation } from "@/lib/llm/structured";
 
 export const EXTRACTION_SYSTEM_PROMPT = `You extract engineering requirements from a Jira-style ticket.
 
