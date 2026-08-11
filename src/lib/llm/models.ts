@@ -57,6 +57,20 @@ export function getSelectableModel(id: string): SelectableModel | undefined {
   return SELECTABLE_MODELS.find((m) => m.id === id);
 }
 
+/**
+ * Resolves which model a run should use.
+ *
+ * Precedence: an explicit request, then the configured ANTHROPIC_MODEL, then
+ * the built-in default. The middle step matters — without it the env var would
+ * govern the CLI scripts while the web UI silently ignored it. A configured
+ * model that is off the allowlist (a preview model, a typo) is not inherited.
+ */
+export function resolveModel(requested: unknown, configured: unknown): string {
+  if (isSelectableModel(requested)) return requested;
+  if (isSelectableModel(configured)) return configured;
+  return DEFAULT_SELECTABLE_MODEL;
+}
+
 /** Every selectable model must be priced, or the run report shows "unknown". */
 export function unpricedSelectableModels(): string[] {
   return SELECTABLE_MODELS.filter((m) => !(m.id in MODEL_PRICING)).map((m) => m.id);

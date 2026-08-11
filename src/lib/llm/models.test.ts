@@ -4,6 +4,7 @@ import {
   getSelectableModel,
   isSelectableModel,
   SELECTABLE_MODELS,
+  resolveModel,
   unpricedSelectableModels,
 } from "./models";
 
@@ -32,5 +33,30 @@ describe("selectable models", () => {
   it("has unique ids", () => {
     const ids = SELECTABLE_MODELS.map((m) => m.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("resolveModel", () => {
+  it("prefers an explicit request over configuration", () => {
+    expect(resolveModel("claude-opus-5", "claude-haiku-4-5")).toBe("claude-opus-5");
+  });
+
+  it("falls back to the configured model when none is requested", () => {
+    // Without this, ANTHROPIC_MODEL would govern the CLI scripts while the web
+    // UI silently ignored it.
+    expect(resolveModel(undefined, "claude-sonnet-5")).toBe("claude-sonnet-5");
+  });
+
+  it("ignores a configured model that is off the allowlist", () => {
+    expect(resolveModel(undefined, "claude-fable-5")).toBe(DEFAULT_SELECTABLE_MODEL);
+    expect(resolveModel(undefined, "typo-model")).toBe(DEFAULT_SELECTABLE_MODEL);
+  });
+
+  it("ignores a requested model that is off the allowlist", () => {
+    expect(resolveModel("gpt-4", "claude-sonnet-5")).toBe("claude-sonnet-5");
+  });
+
+  it("falls back to the default when nothing is set", () => {
+    expect(resolveModel(undefined, undefined)).toBe(DEFAULT_SELECTABLE_MODEL);
   });
 });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAnthropicProvider, readLlmConfig } from "@/lib/llm/config";
-import { DEFAULT_SELECTABLE_MODEL, isSelectableModel, SELECTABLE_MODELS } from "@/lib/llm/models";
+import { isSelectableModel, resolveModel, SELECTABLE_MODELS } from "@/lib/llm/models";
 import type { ModelProvider } from "@/lib/llm/types";
 import { createReplayProvider, hasRecording } from "@/lib/replay";
 import { parseTicket } from "@/lib/ticket/schema";
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const requestedModel = isSelectableModel(body.model) ? body.model : DEFAULT_SELECTABLE_MODEL;
+  const requestedModel = resolveModel(body.model, config.model);
 
   if (wantsLive && config.provider === "anthropic") {
     try {
@@ -107,6 +107,6 @@ export async function GET() {
     liveEnabled: config.provider === "anthropic",
     model: config.model,
     models: SELECTABLE_MODELS,
-    defaultModel: DEFAULT_SELECTABLE_MODEL,
+    defaultModel: resolveModel(undefined, config.model),
   });
 }
