@@ -57,8 +57,14 @@ export class MissingApiKeyError extends Error {
  * Builds the real provider. Throws a directive error rather than a raw SDK
  * failure when the key is absent, since that is the most likely setup mistake.
  */
-export function createAnthropicProvider(env: LlmEnv = process.env): ModelProvider {
-  const { model } = readLlmConfig(env);
+export function createAnthropicProvider(
+  env: LlmEnv = process.env,
+  modelOverride?: string,
+): ModelProvider {
+  const { model: configuredModel } = readLlmConfig(env);
+  // Callers may override the model, but the API route only passes values that
+  // cleared the allowlist — an unvalidated string must never reach here.
+  const model = modelOverride ?? configuredModel;
   const apiKey = env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) {
     throw new MissingApiKeyError();

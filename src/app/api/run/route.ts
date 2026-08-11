@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAnthropicProvider, readLlmConfig } from "@/lib/llm/config";
+import { DEFAULT_SELECTABLE_MODEL, isSelectableModel, SELECTABLE_MODELS } from "@/lib/llm/models";
 import type { ModelProvider } from "@/lib/llm/types";
 import { createReplayProvider, hasRecording } from "@/lib/replay";
 import { parseTicket } from "@/lib/ticket/schema";
@@ -22,6 +23,7 @@ interface RunRequestBody {
   ticket?: unknown;
   fixtureKey?: unknown;
   mode?: unknown;
+  model?: unknown;
 }
 
 export async function POST(request: Request) {
@@ -48,9 +50,21 @@ export async function POST(request: Request) {
   let provider: ModelProvider;
   let mode: "replay" | "live";
 
+  // An allowlist, not a passthrough: an arbitrary model string from a request
+  // would hand the caller control over spend.
+  if (body.model !== undefined && !isSelectableModel(body.model)) {
+    return NextResponse.json(
+      {
+        error: `Unsupported model. Choose one of: ${SELECTABLE_MODELS.map((m) => m.id).join(", ")}`,
+      },
+      { status: 400 },
+    );
+  }
+  const requestedModel = isSelectableModel(body.model) ? body.model : DEFAULT_SELECTABLE_MODEL;
+
   if (wantsLive && config.provider === "anthropic") {
     try {
-      provider = createAnthropicProvider();
+      provider = createAnthropicProvider(process.env, requestedModel);
       mode = "live";
     } catch (error) {
       return NextResponse.json(
@@ -92,5 +106,7 @@ export async function GET() {
   return NextResponse.json({
     liveEnabled: config.provider === "anthropic",
     model: config.model,
+    models: SELECTABLE_MODELS,
+    defaultModel: DEFAULT_SELECTABLE_MODEL,
   });
 }

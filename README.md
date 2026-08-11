@@ -76,6 +76,19 @@ Replan rate is **not** stable across runs. On the previous run a different case 
 
 Both sets of recordings are kept so the before/after is reproducible rather than asserted.
 
+**Cost across models.** Same ticket, one full run each:
+
+| Model | Calls | Output tokens | Latency | Cost | Rubric |
+|---|---|---|---|---|---|
+| Haiku 4.5 | 3 | ~2,800 | ~28s | $0.017 | 4.4 |
+| Sonnet 5 | 3 | 4,204 | 45.1s | $0.075 | 4.4 |
+| Opus 5 | 3 | 7,558 | 97.7s | $0.220 | 4.4 |
+
+Opus is 5x Haiku per token but **13x per run**, because thinking is on by
+default and inflates output. On this ticket all three scored the same rubric
+average, so the extra spend bought no measurable quality — which is the kind of
+thing you only learn by measuring it.
+
 **A false assumption the evals also caught.** `clarificationNeeded` came back `true` for every fixture, including the well-specified one. It over-flags and cannot gate anything on its own. That is pinned as a test rather than quietly corrected.
 
 ## Deterministic vs. model-based evaluation
@@ -161,7 +174,7 @@ Failure paths are covered as first-class cases: schema violations and repair, ex
 
 - **It plans work; it does not write code.** There is no repository access, no execution, no PR.
 - **No persistence.** Runs live in memory; the approval decision is recorded for the session only, and the UI says so.
-- **One model family.** Tested on `claude-haiku-4-5`. Opus would likely score differently and cost ~10× more.
+- **Model comparison is one ticket deep.** Haiku, Sonnet, and Opus were each run once on the same ticket and scored identically. That is a data point, not a finding — the eval suite runs only on Haiku.
 - **The judge is uncalibrated.** The 3.5 threshold is a starting point, not validated against human raters.
 - **Small eval set.** Seven cases is enough to catch gross regressions, not to measure quality precisely.
 - **Replay covers three tickets.** Any other ticket needs live mode.

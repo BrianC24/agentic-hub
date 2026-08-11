@@ -22,10 +22,16 @@ const INITIAL_STATE: IntakeState = { status: "idle", ticket: null, errors: [] };
 export interface TicketIntakeFormProps {
   /** Called with a schema-valid ticket plus the fixture it came from, if any. */
   onValidated?: (ticket: Ticket, fixtureKey: string | null) => void;
+  /** Fires whenever the ticket's link to a recording changes. */
+  onTicketChanged?: (fixtureKey: string | null) => void;
   busy?: boolean;
 }
 
-export function TicketIntakeForm({ onValidated, busy = false }: TicketIntakeFormProps = {}) {
+export function TicketIntakeForm({
+  onValidated,
+  onTicketChanged,
+  busy = false,
+}: TicketIntakeFormProps = {}) {
   const formId = useId();
   const [values, setValues] = useState<TicketFormValues>(EMPTY_TICKET_FORM_VALUES);
   const [state, setState] = useState<IntakeState>(INITIAL_STATE);
@@ -55,19 +61,24 @@ export function TicketIntakeForm({ onValidated, busy = false }: TicketIntakeForm
     if (!fixture) return;
     setValues(ticketFormValuesFromTicket(fixture.ticket));
     setFixtureKey(fixture.key);
+    onTicketChanged?.(fixture.key);
     setState(INITIAL_STATE);
   }
 
   function handleReset() {
     setValues(EMPTY_TICKET_FORM_VALUES);
     setFixtureKey(null);
+    onTicketChanged?.(null);
     setState(INITIAL_STATE);
   }
 
   // Editing a loaded example detaches it from its recording, since the
   // replayed responses no longer correspond to the ticket on screen.
   function editField<K extends keyof TicketFormValues>(key: K, value: TicketFormValues[K]) {
-    setFixtureKey(null);
+    if (fixtureKey !== null) {
+      setFixtureKey(null);
+      onTicketChanged?.(null);
+    }
     updateField(key, value);
   }
 

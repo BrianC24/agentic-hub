@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { TicketIntakeForm } from "@/components/ticket-intake/TicketIntakeForm";
 import { StageRail } from "@/components/workflow/StageRail";
 import { RunReport } from "@/components/workflow/RunReport";
+import { DEFAULT_SELECTABLE_MODEL, type SelectableModel } from "@/lib/llm/models";
+import { hasRecording } from "@/lib/replay";
 import type { Ticket } from "@/lib/ticket/schema";
 import type { WorkflowResult } from "@/lib/workflow/orchestrator";
 import styles from "./WorkflowPage.module.css";
@@ -18,16 +20,23 @@ export function WorkflowPage() {
   const [state, setState] = useState<RunState>({ status: "idle" });
   const [liveEnabled, setLiveEnabled] = useState(false);
   const [preferLive, setPreferLive] = useState(false);
+  const [models, setModels] = useState<SelectableModel[]>([]);
+  const [model, setModel] = useState(DEFAULT_SELECTABLE_MODEL);
+  const [fixtureKey, setFixtureKey] = useState<string | null>(null);
 
   // The server decides whether live runs are possible; the client only asks.
   useEffect(() => {
     fetch("/api/run")
       .then((r) => r.json())
-      .then((d) => setLiveEnabled(Boolean(d.liveEnabled)))
+      .then((d) => {
+        setLiveEnabled(Boolean(d.liveEnabled));
+        setModels(d.models ?? []);
+        if (d.defaultModel) setModel(d.defaultModel);
+      })
       .catch(() => setLiveEnabled(false));
   }, []);
 
-  async function startRun(ticket: Ticket, fixtureKey: string | null) {
+  async function startRun(ticket: Ticket, key: string | null) {
     setState({ status: "running" });
     try {
       const response = await fetch("/api/run", {
@@ -35,7 +44,8 @@ export function WorkflowPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ticket,
-          fixtureKey,
+          fixtureKey: key,
+          model,
           mode: preferLive && liveEnabled ? "live" : "replay",
         }),
       });
@@ -72,14 +82,34 @@ export function WorkflowPage() {
           <span className={styles.wordmark}>Agentic Hub</span>
           <div className={styles.topbarMeta}>
             {liveEnabled ? (
-              <label className={styles.modeToggle}>
-                <input
-                  type="checkbox"
-                  checked={preferLive}
-                  onChange={(e) => setPreferLive(e.target.checked)}
-                />
-                Live model calls
-              </label>
+              <>
+                <label className={styles.modeToggle}>
+                  <input
+                    type="checkbox"
+                    checked={preferLive}
+                    onChange={(e) => setPreferLive(e.target.checked)}
+                  />
+                  Live model calls
+                </label>
+                <label className={styles.modelPicker}>
+                  <span className="sr-only">Model</span>
+                  <select
+                    value={model}
+                    disabled={!preferLive}
+                    onChange={(e) => setModel(e.target.value)}
+                    title={
+                      models.find((m) => m.id === model)?.note ??
+                      "Model used for live runs"
+                    }
+                  >
+                    {models.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label} · ~${m.approxRunCostUsd.toFixed(3)}/run
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
             ) : (
               <span>Replay mode</span>
             )}
@@ -101,7 +131,17 @@ export function WorkflowPage() {
           </p>
         </div>
 
-        <TicketIntakeForm onValidated={startRun} busy={state.status === "running"} />
+        <RunModeHint
+          live={preferLive && liveEnabled}
+          model={models.find((m) => m.id === model)}
+          fixtureKey={fixtureKey}
+        />
+
+        <TicketIntakeForm
+          onValidated={startRun}
+          onTicketChanged={setFixtureKey}
+          busy={state.status === "running"}
+        />
 
         {state.status === "running" && (
           <div className={styles.running} role="status">
@@ -121,6 +161,50 @@ export function WorkflowPage() {
           <RunReport result={state.result} mode={state.mode} model={state.model} />
         )}
       </main>
+    </div>
+  );
+}
+
+/**
+ * Says up front which mode a run will use, and what it will cost.
+ *
+ * Without this the only way to discover that a ticket has no recording is to
+ * submit it and read an error, which is a poor way to learn how the demo works.
+ */
+function RunModeHint({
+  live,
+  model,
+  fixtureKey,
+}: {
+  live: boolean;
+  model: SelectableModel | undefined;
+  fixtureKey: string | null;
+}) {
+  const replayable = fixtureKey !== null && hasRecording(fixtureKey);
+
+  if (live) {
+    return (
+      <div className={styles.hint}>
+        <strong>Live run.</strong> Calls {model?.label ?? "the model"} for real — about{" "}
+        ${model?.approxRunCostUsd.toFixed(3) ?? "0.02"} and ~30s.
+        {model?.note ? ` ${model.note}` : ""}
+      </div>
+    );
+  }
+
+  if (replayable) {
+    return (
+      <div className={styles.hint}>
+        <strong>Replay run.</strong> Uses recorded responses for this example — free and instant.
+        The workflow itself runs for real; only the transport is swapped.
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${styles.hint} ${styles.hintWarn}`}>
+      <strong>No recording for this ticket.</strong> Load one of the examples to replay it for
+      free, or enable live model calls to run it against the API.
     </div>
   );
 }
