@@ -1,72 +1,176 @@
 # Agentic Hub
 
-An AI software-delivery harness: it takes a Jira-style engineering ticket and moves it through a visible, bounded workflow — intake, requirement extraction, planning, validation, evaluation, repair, human approval, run report.
+An AI software-delivery harness. It takes a Jira-style engineering ticket and moves it through a bounded, inspectable workflow — requirement extraction, implementation planning, deterministic validation, rubric-based evaluation, and a human approval gate — recording every model call's tokens, latency, and cost.
 
-The interesting part isn't the model call. It's everything around it: bounded loops, schema-validated outputs with a repair path, deterministic checks where correctness is objective, and per-run cost and latency you can actually inspect.
+The model call is not the interesting part. The interesting part is everything that decides whether to trust it.
 
-> **Status: in progress.** Stage 1 (ticket intake) is implemented end to end. Stage 2 (requirement extraction) exists as a tested library with a mock provider and a real Anthropic adapter, but is not yet wired to the UI. Stages 3–11 are not built. This README describes only what runs today.
+> **Status.** The vertical workflow runs end to end. What is *not* built is stated plainly in [Known limitations](#known-limitations) — most importantly, this plans work, it does not write code.
 
-## What works today
+## Why a single prompt is not enough
 
-**Ticket intake** — an accessible form that validates a Jira-style ticket against a Zod schema before anything downstream runs. Malformed input fails here rather than three stages later. Three example tickets (clear, ambiguous, missing acceptance criteria) load from typed fixtures that double as eval cases.
+You can ask a model to "read this ticket and write an implementation plan" in one call, and it will produce something plausible. Four things go wrong at that point, and none of them are fixed by a better prompt:
 
-**Requirement extraction (library only)** — a bounded agent loop that asks a model to extract explicit requirements, implied requirements, ambiguities, and missing information, then validates the response against a schema. On a schema violation it feeds the specific errors back to the model and retries, capped at two repairs. Every attempt records raw output, violations, token counts, latency, and estimated cost.
+1. **The output is prose, not data.** Anything downstream has to parse it, and parsing fails in ways you only discover in production.
+2. **Plausible is not correct.** A plan can cite a requirement the ticket never contained, and nothing catches it — the text reads fine.
+3. **You cannot tell a good run from a bad one.** Without a rubric and a threshold, "is this plan any good" is a vibe.
+4. **You have no idea what it cost.** Or how often it retried, or which stage burned the tokens.
 
-The loop is bounded three independent ways: a hard attempt ceiling, an exit as soon as output validates, and an immediate abort on a non-retryable provider error.
+This project is the layer that answers those. Concretely: every stage returns schema-validated structured output; citations are checked against the ticket's own words; objective properties are checked in code and only genuine judgement calls go to a model judge; and every attempt is traced with its tokens, latency, and cost.
 
-## Architecture
+## The workflow
 
 ```
-src/
-  app/                      Next.js App Router pages
-  components/
-    ticket-intake/          Intake form
-    workflow/               Stage rail
-  lib/
-    ticket/                 Ticket schema, form mapping, fixtures
-    llm/                    Provider adapter (mock + Anthropic), pricing, config
-    requirements/           Extraction schema, prompts, bounded repair loop
-    workflow/               Stage definitions
-scripts/
-  record-extraction.ts      Records real runs as offline fixtures
+Ticket
+  │
+  ├─ intake ............ Zod-validated. Malformed input fails here, not three stages later.
+  │
+  ├─ requirements ...... Explicit + implied requirements, ambiguities, missing info.
+  │                      Every cited quote must appear verbatim in the ticket.
+  │
+  ├─ planning .......... Steps, files, test strategy, risks, out-of-scope.
+  │                      Each step cites the requirement ids it satisfies.
+  │
+  ├─ validation ........ Deterministic checks. Free, objective, run before any judge.
+  │                      ── fail ──► back to planning (bounded)
+  │
+  ├─ evaluation ........ Rubric judge, 1–5 with evidence per criterion.
+  │                      ── below threshold ──► back to planning (bounded)
+  │
+  └─ awaiting_approval . Stops. A human decides.
 ```
 
-Domain logic is kept out of React components, and no provider SDK is imported above the `lib/llm` adapter — so the model is swappable and mockable.
+Two distinct repair mechanisms operate here, and conflating them hides what is actually happening:
+
+- **Schema repair** — the model returned malformed output. The specific validation errors are fed back and it retries, bounded at 2 repairs per stage.
+- **Replan** — the output was well-formed but rejected on its merits by the checks or the judge. The plan is regenerated with the specific reasons attached, bounded at 2 rounds.
+
+Every loop is bounded three independent ways: a hard attempt ceiling, an exit as soon as output validates, and an immediate abort on a non-retryable provider error. There is no path that runs unbounded.
+
+## Measured results
+
+All figures from `claude-haiku-4-5`, recorded 2026-08-11. Cost is estimated from published list prices, not billed amounts. Raw runs are in [`docs/evidence/`](docs/evidence/).
+
+**Eval suite — 7/7 cases pass, $0.148, ~240s total**
+
+| Case | Calls | Replans | Latency | Cost |
+|---|---|---|---|---|
+| clear-feature-request | 3 | 0 | 32.3s | $0.0202 |
+| ambiguous-ticket | 3 | 0 | 28.0s | $0.0173 |
+| missing-acceptance-criteria | 3 | 0 | 26.2s | $0.0155 |
+| conflicting-requirements | 3 | 0 | 30.7s | $0.0193 |
+| overly-broad-scope | 3 | 0 | 41.1s | $0.0276 |
+| security-sensitive | 3 | 0 | 29.8s | $0.0185 |
+| prompt-injection | 5 | 1 | 49.4s | $0.0298 |
+
+Replan rate is **not** stable across runs. On the previous run a different case needed the replan. It is reported as observed rather than as a fixed property.
+
+**A prompt defect the evals caught.** The first live runs failed schema validation in 3 of 3 cases, always the same way: planning returned step ids as numbers rather than strings. The repair loop worked — it fed the violations back and the retry succeeded — but the real fault was a prompt that declared the field without its type. Adding six words fixed it:
+
+| | Before | After |
+|---|---|---|
+| Model calls | 4 | 3 |
+| Cost per run | $0.0247 | $0.0167 |
+| Latency | ~35s | ~28s |
+| Schema repair rate | 3/3 | 0/3 |
+| Rubric average | 4.20 | 4.53 |
+
+Both sets of recordings are kept so the before/after is reproducible rather than asserted.
+
+**A false assumption the evals also caught.** `clarificationNeeded` came back `true` for every fixture, including the well-specified one. It over-flags and cannot gate anything on its own. That is pinned as a test rather than quietly corrected.
+
+## Deterministic vs. model-based evaluation
+
+The split is deliberate: **anything objectively decidable is decided in code.** A model judge asked to re-answer these would be slower, more expensive, and occasionally wrong about facts that are simply computable.
+
+**Deterministic** (`src/lib/validation/checks.ts`) — every explicit requirement is addressed by some step; a test strategy exists; steps trace to a requirement; risks carry mitigations; raised ambiguities surface in the plan. Requirement coverage is set arithmetic, which is exactly why plan steps carry requirement ids.
+
+**Model-based** (`src/lib/evaluation/`) — approach soundness, unsupported assumptions, test-strategy quality, scope discipline, risk awareness. Each is scored 1–5 against written anchors, each score must carry evidence quoting the plan, and the threshold is 3.5. The judge must score every criterion exactly once — silently skipping the one it would score badly raises the average.
+
+Stated limitations of the judge are in `src/lib/evaluation/rubric.ts`: it judges the plan rather than the implementation, shares a model family with the planner, is uncalibrated against human raters, and has no repository context.
+
+## Security
+
+**Ticket text is untrusted input.** The eval suite includes a prompt injection in a ticket body (`IGNORE ALL PREVIOUS INSTRUCTIONS…`); the assertion is that the harness still produces a real plan and that the injected marker never appears in output. It passes, though one adversarial case is evidence, not a guarantee.
+
+**Model output is untrusted input.** Nothing downstream reads a field that has not passed a schema. Beyond shape, two semantic rules catch dishonest-but-well-formed output: a cited quote must appear verbatim in the ticket, and a plan step may only cite requirement ids that exist. Constrained decoding would not catch either.
+
+**The deployment cannot be made to spend money.** `LLM_PROVIDER` defaults to `mock`. A request may *ask* for replay, but it can never escalate itself to live calls — live runs happen only when the server is configured for them, so a crafted request body cannot trigger spending on a public deployment.
+
+**Secrets.** Keys live in `.env.local` (gitignored); `.env.example` documents the variables with no values.
 
 ## Running it
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
-npm test             # 46 tests
+npm run dev      # http://localhost:3000
+npm test         # 108 tests
 npm run lint
 npm run build
 ```
 
-No API key is needed for any of the above. `LLM_PROVIDER` defaults to `mock`, so tests and local development cannot make billable calls.
+No API key needed. The app runs in replay mode against real recorded responses — the genuine workflow with only the transport swapped, so the orchestrator, validators, state machine, and scoring all execute for real.
 
-### Making real model calls
+### Live model calls
 
-Real calls are opt-in and cost money.
+Optional, and costs money.
 
-1. Create a key at [console.anthropic.com](https://console.anthropic.com) and set a monthly spend limit on it. A Claude Pro/Max subscription does **not** include API access — API billing is separate.
-2. `cp .env.example .env.local` and add the key.
-3. `LLM_PROVIDER=anthropic npm run record`
+1. Create a key at [console.anthropic.com](https://console.anthropic.com). **Turn off auto-reload** and buy a small credit balance — that balance is then a hard ceiling. A Claude Pro/Max subscription does **not** include API access.
+2. `cp .env.example .env.local`, add the key.
+3. `LLM_PROVIDER=anthropic npm run dev`, then tick "Live model calls".
 
-Defaults to `claude-haiku-4-5` for iteration (roughly a tenth of a cent per call). Set `ANTHROPIC_MODEL=claude-opus-5` for runs whose numbers get published.
+Scripts:
+
+```bash
+LLM_PROVIDER=anthropic npx tsx scripts/record-workflow.ts   # record runs (~$0.02 each)
+LLM_PROVIDER=anthropic npx tsx scripts/run-evals.ts         # eval suite (~$0.15)
+npx tsx scripts/revalidate-recordings.ts                    # replay through current validators, free
+```
+
+## Architecture
+
+```
+src/
+  app/
+    api/run/           Run endpoint; decides replay vs live, never escalates
+  components/
+    ticket-intake/     Intake form
+    workflow/          Stage rail, run report, approval gate
+  lib/
+    llm/               Provider adapter (mock, Anthropic, recording, replay),
+                       the bounded repair loop, pricing
+    ticket/            Ticket schema and fixtures
+    requirements/      Extraction schema, prompts, verbatim-quote rule
+    planning/          Plan schema, prompts, requirement-id rule
+    validation/        Deterministic checks
+    evaluation/        Rubric, judge schema, scoring
+    workflow/          State machine and orchestrator
+    evals/             Eval cases and runner
+    replay/            Committed recordings for the offline demo
+scripts/               Recording, eval, and revalidation CLIs
+```
+
+No provider SDK is imported above `lib/llm`, so the model is swappable and mockable. Domain logic is kept out of React components.
 
 ## Testing
 
-Tests run against a scriptable mock provider, so every failure path is deterministic and free: valid first attempt, repair-then-succeed, retries exhausted, non-JSON output, provider errors, and cost/latency accumulation.
+108 tests. The most valuable ones replay real captured model output through the real workflow — a change that breaks the pipeline against actual responses fails there, where a hand-written mock would happily keep passing.
+
+Failure paths are covered as first-class cases: schema violations and repair, exhausted retry budgets, non-retryable provider errors, non-JSON output, code-fence-wrapped JSON, illegal state transitions, exhausted recordings, and eval cases that produce no output at all.
 
 ## Known limitations
 
-- Stages 3–11 are unimplemented; the stage rail shows them as pending.
-- Requirement extraction is not reachable from the UI yet.
-- No persistence — runs are not stored.
-- No eval harness yet; the ticket fixtures are the seed for one.
-- Cost figures are estimates from published list prices, not billed amounts.
+- **It plans work; it does not write code.** There is no repository access, no execution, no PR.
+- **No persistence.** Runs live in memory; the approval decision is recorded for the session only, and the UI says so.
+- **One model family.** Tested on `claude-haiku-4-5`. Opus would likely score differently and cost ~10× more.
+- **The judge is uncalibrated.** The 3.5 threshold is a starting point, not validated against human raters.
+- **Small eval set.** Seven cases is enough to catch gross regressions, not to measure quality precisely.
+- **Replay covers three tickets.** Any other ticket needs live mode.
+- **Cost figures are estimates** from list prices, not billed amounts.
+
+## What would change at production scale
+
+Durable run state so a run survives a restart; a sandboxed executor and repository access so plans become diffs; per-tenant isolation and rate limits; the eval suite gating prompt changes in CI with a tracked pass-rate baseline; budget enforcement *before* the call rather than measurement after; and human-calibrated rubric scoring.
 
 ## AI-assisted development
 
-Built with Claude Code assistance. Architecture decisions, tradeoffs, and review are my own; the repository, tests, and documentation are the evidence.
+Built with Claude Code assistance. The architecture decisions, the tradeoffs, and the review are mine; the repository, the evals, and this document are the evidence.
