@@ -1,0 +1,425 @@
+{
+  "fixtureKey": "ambiguous-ticket",
+  "model": "claude-haiku-4-5",
+  "recordedAt": "2026-08-11T22-18-56-012Z",
+  "exchanges": [
+    {
+      "request": {
+        "system": "You extract engineering requirements from a Jira-style ticket.\n\nReturn a single JSON object with exactly these fields:\n- summary: one or two sentences describing what the ticket asks for.\n- explicitRequirements: array of { id, text, sourceQuote } — things the ticket states directly. sourceQuote must be a verbatim substring of the ticket.\n- impliedRequirements: array of { id, text } — things a competent engineer would infer but the ticket does not state. Omit sourceQuote here.\n- ambiguities: array of { question, why } — genuine ambiguities that would change the implementation.\n- missingInformation: array of strings — information needed before work can start.\n- clarificationNeeded: boolean — true only when the ticket cannot responsibly proceed without a human answer.\n\nRules:\n- Do not invent requirements the ticket does not support. An empty array is a valid answer.\n- Prefer flagging an ambiguity over guessing an interpretation.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-201\nType: bug\nPriority: high\nTitle: Improve board performance\n\nDescription:\nBoards feel slow sometimes, especially with lots of cards. Can we speed this up?\n\nAcceptance criteria:\n(none provided)"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"summary\": \"The board interface experiences performance degradation when displaying many cards. The ticket requests general performance improvements to address slowness.\",\n  \"explicitRequirements\": [\n    {\n      \"id\": \"ER1\",\n      \"text\": \"Improve board performance\",\n      \"sourceQuote\": \"Improve board performance\"\n    },\n    {\n      \"id\": \"ER2\",\n      \"text\": \"Address slowness especially with lots of cards\",\n      \"sourceQuote\": \"Boards feel slow sometimes, especially with lots of cards\"\n    }\n  ],\n  \"impliedRequirements\": [\n    {\n      \"id\": \"IR1\",\n      \"text\": \"Measure or establish a performance baseline before and after changes\"\n    },\n    {\n      \"id\": \"IR2\",\n      \"text\": \"Identify the root causes of slowness (rendering, data fetching, DOM operations, etc.)\"\n    },\n    {\n      \"id\": \"IR3\",\n      \"text\": \"Ensure the fix scales reasonably as card count increases\"\n    }\n  ],\n  \"ambiguities\": [\n    {\n      \"question\": \"What is the actual performance problem: slow initial load, slow interactions (scrolling/filtering), slow card rendering, or all of the above?\",\n      \"why\": \"The ticket says 'feel slow sometimes' without specifying which operations are affected, which changes the optimization approach.\"\n    },\n    {\n      \"question\": \"What is 'lots of cards'—is this 50, 500, or 5000 cards?\",\n      \"why\": \"The threshold for performance problems determines acceptable load times and optimization strategy.\"\n    },\n    {\n      \"question\": \"What is the target performance metric (e.g., first render time, interaction latency, frame rate)?\",\n      \"why\": \"Without a concrete goal, it is unclear when the problem is solved.\"\n    }\n  ],\n  \"missingInformation\": [\n    \"Current measured performance metrics (load time, frame rate, memory usage)\",\n    \"Number of cards that trigger noticeable slowness\",\n    \"Which specific user actions feel slow (loading, scrolling, card creation, filtering, etc.)\",\n    \"Whether the issue is browser-side rendering, backend API response time, or both\",\n    \"Target performance criteria (acceptance thresholds for load time or responsiveness)\"\n  ],\n  \"clarificationNeeded\": true\n}\n```",
+        "usage": {
+          "inputTokens": 302,
+          "outputTokens": 571
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 5522
+    },
+    {
+      "request": {
+        "system": "You write an implementation plan for an engineering ticket, given requirements already extracted from it.\n\nReturn a single JSON object with exactly these fields:\n- approach: two or three sentences describing the overall strategy.\n- steps: array of { id, description, addressesRequirements, files } — ordered implementation steps. id is a STRING label such as \"S1\", \"S2\" — never a bare number. addressesRequirements is an array of STRINGS listing the requirement ids this step satisfies, and every id must be one you were given. files is an array of STRINGS listing paths expected to change, and may be empty.\n- testStrategy: array of strings — how the change will be verified. At least one entry.\n- risks: array of { description, mitigation } — what could go wrong and what reduces that.\n- outOfScope: array of strings — work deliberately not being done.\n\nRules:\n- Every explicit requirement must be addressed by at least one step.\n- Only cite requirement ids that were given to you. Do not invent ids.\n- If the requirements say clarification is needed, still produce a plan, but list the open questions in risks.\n- Prefer the simplest approach that satisfies the requirements.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-201: Improve board performance\n\nSummary of the request:\nThe board interface experiences performance degradation when displaying many cards. The ticket requests general performance improvements to address slowness.\n\nExplicit requirements:\n- ER1: Improve board performance\n- ER2: Address slowness especially with lots of cards\n\nImplied requirements:\n- IR1: Measure or establish a performance baseline before and after changes\n- IR2: Identify the root causes of slowness (rendering, data fetching, DOM operations, etc.)\n- IR3: Ensure the fix scales reasonably as card count increases\n\nOpen ambiguities:\n- What is the actual performance problem: slow initial load, slow interactions (scrolling/filtering), slow card rendering, or all of the above?\n- What is 'lots of cards'—is this 50, 500, or 5000 cards?\n- What is the target performance metric (e.g., first render time, interaction latency, frame rate)?\n\nClarification needed before work starts: yes"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"approach\": \"Establish a performance baseline by profiling the board with varying card counts to identify bottlenecks (rendering, data fetching, or DOM operations), then implement targeted optimizations such as virtualization, lazy loading, or memoization. Measure improvements against the baseline to ensure changes scale effectively.\",\n  \"steps\": [\n    {\n      \"id\": \"S1\",\n      \"description\": \"Set up performance profiling infrastructure and establish baseline metrics. Use browser DevTools, Lighthouse, or similar to measure initial load time, interaction latency, and frame rate across different card counts (50, 100, 500 cards).\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"docs/performance-baseline.md\"\n      ]\n    },\n    {\n      \"id\": \"S2\",\n      \"description\": \"Profile the board component to identify root causes of slowness (e.g., inefficient re-renders, expensive DOM operations, network waterfalls, or large bundle size). Document findings and prioritize optimization opportunities.\",\n      \"addressesRequirements\": [\n        \"IR2\"\n      ],\n      \"files\": [\n        \"docs/performance-analysis.md\"\n      ]\n    },\n    {\n      \"id\": \"S3\",\n      \"description\": \"Implement primary optimization based on identified bottleneck—likely candidates are virtualization (render only visible cards), lazy loading (defer off-screen content), or memoization (prevent unnecessary re-renders). Choose the approach that addresses the largest performance gap.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"ER2\"\n      ],\n      \"files\": [\n        \"src/components/Board.jsx\",\n        \"src/components/CardList.jsx\",\n        \"src/hooks/useVirtualization.js\"\n      ]\n    },\n    {\n      \"id\": \"S4\",\n      \"description\": \"Re-measure performance metrics after optimization across the same card count scenarios (50, 100, 500+). Verify that improvements scale linearly or better and that no regressions occurred.\",\n      \"addressesRequirements\": [\n        \"IR1\",\n        \"IR3\"\n      ],\n      \"files\": [\n        \"docs/performance-results.md\"\n      ]\n    },\n    {\n      \"id\": \"S5\",\n      \"description\": \"Document performance improvement findings, update developer guidelines to prevent future regressions, and consider adding performance tests to CI/CD if baseline warrants ongoing monitoring.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"IR3\"\n      ],\n      \"files\": [\n        \"docs/PERFORMANCE.md\",\n        \"tests/board.performance.test.js\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Compare before/after metrics for load time, frame rate, and interaction latency across multiple card counts (50, 100, 500+) using browser DevTools or Lighthouse.\",\n    \"Verify that scrolling, filtering, and card interactions remain smooth (target 60 FPS or better) after optimization.\",\n    \"Smoke test core board functionality (add, remove, filter cards) to ensure no features are broken by performance changes.\",\n    \"Load-test with maximum anticipated card count to confirm performance scales acceptably.\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Unclear scope of 'lots of cards'—optimization strategy differs significantly for 50 vs. 5000 cards. Virtualization is essential for 1000+, overkill for 50.\",\n      \"mitigation\": \"Clarify target card count in requirements refinement. Profile with a conservative estimate (e.g., 500) and adjust approach if needed after S2.\"\n    },\n    {\n      \"description\": \"Root cause may be external (slow API, large data payload) rather than UI rendering. Optimization effort misdirected if this is not identified early.\",\n      \"mitigation\": \"Include network waterfall analysis and data size inspection in S2 profiling. Separate UI optimization from backend optimization work if needed.\"\n    },\n    {\n      \"description\": \"Virtualization or lazy loading may introduce user experience issues (blank spaces, scroll position loss, content jumps) if not carefully implemented.\",\n      \"mitigation\": \"Implement incrementally, test with real user interactions, and consider progressive loading strategies. Have QA verify UX feels smooth.\"\n    },\n    {\n      \"description\": \"Performance regression could occur if optimization approach is not measurable or monitored going forward.\",\n      \"mitigation\": \"Add performance tests to CI/CD in S5 to catch future regressions. Set explicit performance budgets.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Optimizing the backend API or data fetching (unless profiling reveals that as the primary bottleneck; if so, escalate as separate ticket).\",\n    \"Redesigning the board UI or changing how cards are displayed.\",\n    \"Building new features or card filtering/search functionality beyond what exists today.\",\n    \"Cross-browser or mobile-specific optimizations unless explicitly identified as a blocker.\"\n  ]\n}\n```",
+        "usage": {
+          "inputTokens": 521,
+          "outputTokens": 1205
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 13098
+    },
+    {
+      "request": {
+        "system": "You evaluate an engineering implementation plan against a fixed rubric.\n\nScore every criterion exactly once, on a 1-5 integer scale, using the anchors given. For each score, cite the specific part of the plan that justifies it — quote it or name the step id. A score without concrete evidence is not acceptable.\n\nReturn a single JSON object with exactly these fields:\n- scores: array of { criterionId, score, evidence } — one entry per rubric criterion, no more, no less.\n- overallComment: two or three sentences summarising the plan's fitness.\n\nRules:\n- Be critical. A plan that merely looks organised is not automatically good.\n- Do not re-check things that are mechanically verifiable (whether every requirement id appears, whether a test strategy field is non-empty). Those are checked elsewhere. Judge quality, not presence.\n- Respond with the JSON object only. No prose, no markdown code fence.\n\nRubric:\n- approach_soundness (Approach soundness): Is the proposed approach a reasonable way to satisfy the requirements?\n  Anchors: 5 = the approach is what an experienced engineer would choose. 3 = workable but with an avoidable flaw. 1 = would not produce a working result.\n- unsupported_assumptions (Unsupported assumptions): Does the plan invent constraints, behaviour, or context the ticket and requirements never established?\n  Anchors: 5 = every claim traces to the ticket or is flagged as an assumption. 3 = one minor unflagged assumption. 1 = substantive invented requirements.\n- test_strategy_quality (Test strategy quality): Would the stated tests actually catch a regression in the behaviour being changed?\n  Anchors: 5 = tests target the specific behaviour and its failure modes. 3 = generic tests that would catch only gross breakage. 1 = tests that would pass regardless of correctness.\n- scope_discipline (Scope discipline): Does the plan stay within what was asked?\n  Anchors: 5 = does exactly what the ticket requires. 3 = minor unrequested additions. 1 = substantial unrequested rework.\n- risk_awareness (Risk awareness): Does the plan identify the risks that actually matter for this change, including security and accessibility where relevant?\n  Anchors: 5 = names the genuine risks with useful mitigations. 3 = generic risks only. 1 = misses an obvious serious risk.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-201: Improve board performance\n\nBoards feel slow sometimes, especially with lots of cards. Can we speed this up?\n\nRequirements identified:\n- ER1: Improve board performance\n- ER2: Address slowness especially with lots of cards\n\nAmbiguities raised:\n- What is the actual performance problem: slow initial load, slow interactions (scrolling/filtering), slow card rendering, or all of the above?\n- What is 'lots of cards'—is this 50, 500, or 5000 cards?\n- What is the target performance metric (e.g., first render time, interaction latency, frame rate)?\n\nPlan under evaluation:\n{\n  \"approach\": \"Establish a performance baseline by profiling the board with varying card counts to identify bottlenecks (rendering, data fetching, or DOM operations), then implement targeted optimizations such as virtualization, lazy loading, or memoization. Measure improvements against the baseline to ensure changes scale effectively.\",\n  \"steps\": [\n    {\n      \"id\": \"S1\",\n      \"description\": \"Set up performance profiling infrastructure and establish baseline metrics. Use browser DevTools, Lighthouse, or similar to measure initial load time, interaction latency, and frame rate across different card counts (50, 100, 500 cards).\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"docs/performance-baseline.md\"\n      ]\n    },\n    {\n      \"id\": \"S2\",\n      \"description\": \"Profile the board component to identify root causes of slowness (e.g., inefficient re-renders, expensive DOM operations, network waterfalls, or large bundle size). Document findings and prioritize optimization opportunities.\",\n      \"addressesRequirements\": [\n        \"IR2\"\n      ],\n      \"files\": [\n        \"docs/performance-analysis.md\"\n      ]\n    },\n    {\n      \"id\": \"S3\",\n      \"description\": \"Implement primary optimization based on identified bottleneck—likely candidates are virtualization (render only visible cards), lazy loading (defer off-screen content), or memoization (prevent unnecessary re-renders). Choose the approach that addresses the largest performance gap.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"ER2\"\n      ],\n      \"files\": [\n        \"src/components/Board.jsx\",\n        \"src/components/CardList.jsx\",\n        \"src/hooks/useVirtualization.js\"\n      ]\n    },\n    {\n      \"id\": \"S4\",\n      \"description\": \"Re-measure performance metrics after optimization across the same card count scenarios (50, 100, 500+). Verify that improvements scale linearly or better and that no regressions occurred.\",\n      \"addressesRequirements\": [\n        \"IR1\",\n        \"IR3\"\n      ],\n      \"files\": [\n        \"docs/performance-results.md\"\n      ]\n    },\n    {\n      \"id\": \"S5\",\n      \"description\": \"Document performance improvement findings, update developer guidelines to prevent future regressions, and consider adding performance tests to CI/CD if baseline warrants ongoing monitoring.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"IR3\"\n      ],\n      \"files\": [\n        \"docs/PERFORMANCE.md\",\n        \"tests/board.performance.test.js\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Compare before/after metrics for load time, frame rate, and interaction latency across multiple card counts (50, 100, 500+) using browser DevTools or Lighthouse.\",\n    \"Verify that scrolling, filtering, and card interactions remain smooth (target 60 FPS or better) after optimization.\",\n    \"Smoke test core board functionality (add, remove, filter cards) to ensure no features are broken by performance changes.\",\n    \"Load-test with maximum anticipated card count to confirm performance scales acceptably.\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Unclear scope of 'lots of cards'—optimization strategy differs significantly for 50 vs. 5000 cards. Virtualization is essential for 1000+, overkill for 50.\",\n      \"mitigation\": \"Clarify target card count in requirements refinement. Profile with a conservative estimate (e.g., 500) and adjust approach if needed after S2.\"\n    },\n    {\n      \"description\": \"Root cause may be external (slow API, large data payload) rather than UI rendering. Optimization effort misdirected if this is not identified early.\",\n      \"mitigation\": \"Include network waterfall analysis and data size inspection in S2 profiling. Separate UI optimization from backend optimization work if needed.\"\n    },\n    {\n      \"description\": \"Virtualization or lazy loading may introduce user experience issues (blank spaces, scroll position loss, content jumps) if not carefully implemented.\",\n      \"mitigation\": \"Implement incrementally, test with real user interactions, and consider progressive loading strategies. Have QA verify UX feels smooth.\"\n    },\n    {\n      \"description\": \"Performance regression could occur if optimization approach is not measurable or monitored going forward.\",\n      \"mitigation\": \"Add performance tests to CI/CD in S5 to catch future regressions. Set explicit performance budgets.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Optimizing the backend API or data fetching (unless profiling reveals that as the primary bottleneck; if so, escalate as separate ticket).\",\n    \"Redesigning the board UI or changing how cards are displayed.\",\n    \"Building new features or card filtering/search functionality beyond what exists today.\",\n    \"Cross-browser or mobile-specific optimizations unless explicitly identified as a blocker.\"\n  ]\n}"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"scores\": [\n    {\n      \"criterionId\": \"approach_soundness\",\n      \"score\": 5,\n      \"evidence\": \"The approach is methodical and standard for performance work: establish baseline (S1), diagnose root cause (S2), implement targeted fix (S3), measure and verify (S4), document and prevent regression (S5). This is exactly what an experienced performance engineer would execute. The plan explicitly avoids premature optimization by profiling first.\"\n    },\n    {\n      \"criterionId\": \"unsupported_assumptions\",\n      \"score\": 4,\n      \"evidence\": \"The plan invents specific card counts (50, 100, 500) without ticket guidance. S1 states 'across different card counts (50, 100, 500 cards)' but the ticket does not establish what 'lots of cards' means. However, the plan flags this as an ambiguity and mitigates it in the risks section: 'Clarify target card count in requirements refinement.' The plan also assumes virtualization/memoization are likely solutions (S3) but correctly frames this as 'likely candidates' pending S2 diagnosis. One minor unflagged assumption: that browser DevTools/Lighthouse alone are sufficient for all diagnosis; more specialized profiling tools might be needed depending on the stack.\"\n    },\n    {\n      \"criterionId\": \"test_strategy_quality\",\n      \"score\": 5,\n      \"evidence\": \"Tests are specific and directly target the failure modes. 'Compare before/after metrics for load time, frame rate, and interaction latency across multiple card counts' catches both correctness (smoothness) and performance regression. 'Verify that scrolling, filtering, and card interactions remain smooth (target 60 FPS or better)' catches UX breakage from virtualization bugs. 'Smoke test core board functionality' catches feature regression. 'Load-test with maximum anticipated card count' catches the scaling failure case. These tests would reliably catch regressions in the actual performance problem.\"\n    },\n    {\n      \"criterionId\": \"scope_discipline\",\n      \"score\": 5,\n      \"evidence\": \"The plan stays precisely within the ticket's scope. The 'outOfScope' section explicitly excludes backend optimization (unless identified as root cause in S2), UI redesign, new features, and cross-browser work. S2 includes 'separate UI optimization from backend optimization work if needed,' showing disciplined handoff rather than scope creep. The only deliverables are performance profiling, diagnosis, a single optimization, re-measurement, and documentation—no unrequested additions.\"\n    },\n    {\n      \"criterionId\": \"risk_awareness\",\n      \"score\": 5,\n      \"evidence\": \"The plan identifies four substantive, non-generic risks: (1) scope ambiguity ('unclear scope of lots of cards') with mitigation to profile conservatively and adjust; (2) root cause outside UI rendering ('external API/payload') with mitigation to inspect network waterfalls; (3) UX regression from virtualization ('blank spaces, scroll position loss') with mitigation to test incrementally and involve QA; (4) future regression without monitoring, with mitigation to add CI/CD tests. Each risk has a concrete mitigation tied to a specific step. Missing: no mention of accessibility impact (virtualization can break screen reader navigation if not handled), though this may not apply to a board of cards depending on the context.\"\n    }\n  ],\n  \"overallComment\": \"This is a well-structured performance plan that follows industry best practice: measure first, diagnose root cause, optimize targeted, verify at scale, prevent regression. It appropriately flags the main ambiguities in the ticket (target card count, unknown root cause) and mitigates them with early profiling. The test strategy is specific enough to catch real regressions, and the risks section demonstrates genuine engineering caution around UX and scope.\"\n}\n```",
+        "usage": {
+          "inputTokens": 1910,
+          "outputTokens": 896
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 10159
+    }
+  ],
+  "run": {
+    "id": "run_msp825gb",
+    "ticket": {
+      "id": "NWB-201",
+      "title": "Improve board performance",
+      "description": "Boards feel slow sometimes, especially with lots of cards. Can we speed this up?",
+      "type": "bug",
+      "priority": "high",
+      "acceptanceCriteria": [],
+      "labels": [
+        "performance"
+      ],
+      "reporter": "support-lead@example.com"
+    },
+    "stage": "awaiting_approval",
+    "createdAt": 1786486707227,
+    "updatedAt": 1786486736011,
+    "events": [
+      {
+        "at": 1786486707227,
+        "stage": "intake",
+        "kind": "stage_entered",
+        "message": "Run created from ticket"
+      },
+      {
+        "at": 1786486707227,
+        "stage": "requirements",
+        "kind": "stage_entered",
+        "message": "Extracting requirements"
+      },
+      {
+        "at": 1786486712751,
+        "stage": "requirements",
+        "kind": "stage_succeeded",
+        "message": "Extracted 2 explicit requirement(s), 3 ambiguity(ies)"
+      },
+      {
+        "at": 1786486712751,
+        "stage": "planning",
+        "kind": "stage_entered",
+        "message": "Planning implementation"
+      },
+      {
+        "at": 1786486725851,
+        "stage": "validation",
+        "kind": "stage_entered",
+        "message": "Running deterministic checks"
+      },
+      {
+        "at": 1786486725851,
+        "stage": "validation",
+        "kind": "stage_succeeded",
+        "message": "6 check(s): 0 failed, 0 warned"
+      },
+      {
+        "at": 1786486725851,
+        "stage": "evaluation",
+        "kind": "stage_entered",
+        "message": "Evaluating plan against rubric"
+      },
+      {
+        "at": 1786486736011,
+        "stage": "evaluation",
+        "kind": "stage_succeeded",
+        "message": "Rubric average 4.80 (pass)"
+      },
+      {
+        "at": 1786486736011,
+        "stage": "awaiting_approval",
+        "kind": "stage_entered",
+        "message": "Plan ready for human approval"
+      }
+    ],
+    "repairRounds": 0,
+    "approval": null,
+    "failureReason": null
+  },
+  "artifacts": {
+    "requirements": {
+      "summary": "The board interface experiences performance degradation when displaying many cards. The ticket requests general performance improvements to address slowness.",
+      "explicitRequirements": [
+        {
+          "id": "ER1",
+          "text": "Improve board performance",
+          "sourceQuote": "Improve board performance"
+        },
+        {
+          "id": "ER2",
+          "text": "Address slowness especially with lots of cards",
+          "sourceQuote": "Boards feel slow sometimes, especially with lots of cards"
+        }
+      ],
+      "impliedRequirements": [
+        {
+          "id": "IR1",
+          "text": "Measure or establish a performance baseline before and after changes"
+        },
+        {
+          "id": "IR2",
+          "text": "Identify the root causes of slowness (rendering, data fetching, DOM operations, etc.)"
+        },
+        {
+          "id": "IR3",
+          "text": "Ensure the fix scales reasonably as card count increases"
+        }
+      ],
+      "ambiguities": [
+        {
+          "question": "What is the actual performance problem: slow initial load, slow interactions (scrolling/filtering), slow card rendering, or all of the above?",
+          "why": "The ticket says 'feel slow sometimes' without specifying which operations are affected, which changes the optimization approach."
+        },
+        {
+          "question": "What is 'lots of cards'—is this 50, 500, or 5000 cards?",
+          "why": "The threshold for performance problems determines acceptable load times and optimization strategy."
+        },
+        {
+          "question": "What is the target performance metric (e.g., first render time, interaction latency, frame rate)?",
+          "why": "Without a concrete goal, it is unclear when the problem is solved."
+        }
+      ],
+      "missingInformation": [
+        "Current measured performance metrics (load time, frame rate, memory usage)",
+        "Number of cards that trigger noticeable slowness",
+        "Which specific user actions feel slow (loading, scrolling, card creation, filtering, etc.)",
+        "Whether the issue is browser-side rendering, backend API response time, or both",
+        "Target performance criteria (acceptance thresholds for load time or responsiveness)"
+      ],
+      "clarificationNeeded": true
+    },
+    "plan": {
+      "approach": "Establish a performance baseline by profiling the board with varying card counts to identify bottlenecks (rendering, data fetching, or DOM operations), then implement targeted optimizations such as virtualization, lazy loading, or memoization. Measure improvements against the baseline to ensure changes scale effectively.",
+      "steps": [
+        {
+          "id": "S1",
+          "description": "Set up performance profiling infrastructure and establish baseline metrics. Use browser DevTools, Lighthouse, or similar to measure initial load time, interaction latency, and frame rate across different card counts (50, 100, 500 cards).",
+          "addressesRequirements": [
+            "IR1"
+          ],
+          "files": [
+            "docs/performance-baseline.md"
+          ]
+        },
+        {
+          "id": "S2",
+          "description": "Profile the board component to identify root causes of slowness (e.g., inefficient re-renders, expensive DOM operations, network waterfalls, or large bundle size). Document findings and prioritize optimization opportunities.",
+          "addressesRequirements": [
+            "IR2"
+          ],
+          "files": [
+            "docs/performance-analysis.md"
+          ]
+        },
+        {
+          "id": "S3",
+          "description": "Implement primary optimization based on identified bottleneck—likely candidates are virtualization (render only visible cards), lazy loading (defer off-screen content), or memoization (prevent unnecessary re-renders). Choose the approach that addresses the largest performance gap.",
+          "addressesRequirements": [
+            "ER1",
+            "ER2"
+          ],
+          "files": [
+            "src/components/Board.jsx",
+            "src/components/CardList.jsx",
+            "src/hooks/useVirtualization.js"
+          ]
+        },
+        {
+          "id": "S4",
+          "description": "Re-measure performance metrics after optimization across the same card count scenarios (50, 100, 500+). Verify that improvements scale linearly or better and that no regressions occurred.",
+          "addressesRequirements": [
+            "IR1",
+            "IR3"
+          ],
+          "files": [
+            "docs/performance-results.md"
+          ]
+        },
+        {
+          "id": "S5",
+          "description": "Document performance improvement findings, update developer guidelines to prevent future regressions, and consider adding performance tests to CI/CD if baseline warrants ongoing monitoring.",
+          "addressesRequirements": [
+            "ER1",
+            "IR3"
+          ],
+          "files": [
+            "docs/PERFORMANCE.md",
+            "tests/board.performance.test.js"
+          ]
+        }
+      ],
+      "testStrategy": [
+        "Compare before/after metrics for load time, frame rate, and interaction latency across multiple card counts (50, 100, 500+) using browser DevTools or Lighthouse.",
+        "Verify that scrolling, filtering, and card interactions remain smooth (target 60 FPS or better) after optimization.",
+        "Smoke test core board functionality (add, remove, filter cards) to ensure no features are broken by performance changes.",
+        "Load-test with maximum anticipated card count to confirm performance scales acceptably."
+      ],
+      "risks": [
+        {
+          "description": "Unclear scope of 'lots of cards'—optimization strategy differs significantly for 50 vs. 5000 cards. Virtualization is essential for 1000+, overkill for 50.",
+          "mitigation": "Clarify target card count in requirements refinement. Profile with a conservative estimate (e.g., 500) and adjust approach if needed after S2."
+        },
+        {
+          "description": "Root cause may be external (slow API, large data payload) rather than UI rendering. Optimization effort misdirected if this is not identified early.",
+          "mitigation": "Include network waterfall analysis and data size inspection in S2 profiling. Separate UI optimization from backend optimization work if needed."
+        },
+        {
+          "description": "Virtualization or lazy loading may introduce user experience issues (blank spaces, scroll position loss, content jumps) if not carefully implemented.",
+          "mitigation": "Implement incrementally, test with real user interactions, and consider progressive loading strategies. Have QA verify UX feels smooth."
+        },
+        {
+          "description": "Performance regression could occur if optimization approach is not measurable or monitored going forward.",
+          "mitigation": "Add performance tests to CI/CD in S5 to catch future regressions. Set explicit performance budgets."
+        }
+      ],
+      "outOfScope": [
+        "Optimizing the backend API or data fetching (unless profiling reveals that as the primary bottleneck; if so, escalate as separate ticket).",
+        "Redesigning the board UI or changing how cards are displayed.",
+        "Building new features or card filtering/search functionality beyond what exists today.",
+        "Cross-browser or mobile-specific optimizations unless explicitly identified as a blocker."
+      ]
+    },
+    "validation": {
+      "results": [
+        {
+          "id": "steps-present",
+          "label": "Plan contains at least one step",
+          "status": "pass",
+          "detail": "5 step(s)."
+        },
+        {
+          "id": "requirement-coverage",
+          "label": "Every explicit requirement is addressed",
+          "status": "pass",
+          "detail": "All 2 explicit requirement(s) claimed by at least one step."
+        },
+        {
+          "id": "test-strategy",
+          "label": "Plan states how the change will be verified",
+          "status": "pass",
+          "detail": "4 test-strategy item(s)."
+        },
+        {
+          "id": "orphan-steps",
+          "label": "Steps trace back to a requirement",
+          "status": "pass",
+          "detail": "Every step cites at least one requirement."
+        },
+        {
+          "id": "ambiguities-acknowledged",
+          "label": "Open ambiguities are carried into the plan",
+          "status": "pass",
+          "detail": "3 ambiguity(ies) raised; plan lists 4 risk(s)."
+        },
+        {
+          "id": "risks-mitigated",
+          "label": "Each risk has a mitigation",
+          "status": "pass",
+          "detail": "4 risk(s), all mitigated."
+        }
+      ],
+      "passed": true,
+      "failedCount": 0,
+      "warnedCount": 0
+    },
+    "evaluation": {
+      "evaluation": {
+        "scores": [
+          {
+            "criterionId": "approach_soundness",
+            "score": 5,
+            "evidence": "The approach is methodical and standard for performance work: establish baseline (S1), diagnose root cause (S2), implement targeted fix (S3), measure and verify (S4), document and prevent regression (S5). This is exactly what an experienced performance engineer would execute. The plan explicitly avoids premature optimization by profiling first."
+          },
+          {
+            "criterionId": "unsupported_assumptions",
+            "score": 4,
+            "evidence": "The plan invents specific card counts (50, 100, 500) without ticket guidance. S1 states 'across different card counts (50, 100, 500 cards)' but the ticket does not establish what 'lots of cards' means. However, the plan flags this as an ambiguity and mitigates it in the risks section: 'Clarify target card count in requirements refinement.' The plan also assumes virtualization/memoization are likely solutions (S3) but correctly frames this as 'likely candidates' pending S2 diagnosis. One minor unflagged assumption: that browser DevTools/Lighthouse alone are sufficient for all diagnosis; more specialized profiling tools might be needed depending on the stack."
+          },
+          {
+            "criterionId": "test_strategy_quality",
+            "score": 5,
+            "evidence": "Tests are specific and directly target the failure modes. 'Compare before/after metrics for load time, frame rate, and interaction latency across multiple card counts' catches both correctness (smoothness) and performance regression. 'Verify that scrolling, filtering, and card interactions remain smooth (target 60 FPS or better)' catches UX breakage from virtualization bugs. 'Smoke test core board functionality' catches feature regression. 'Load-test with maximum anticipated card count' catches the scaling failure case. These tests would reliably catch regressions in the actual performance problem."
+          },
+          {
+            "criterionId": "scope_discipline",
+            "score": 5,
+            "evidence": "The plan stays precisely within the ticket's scope. The 'outOfScope' section explicitly excludes backend optimization (unless identified as root cause in S2), UI redesign, new features, and cross-browser work. S2 includes 'separate UI optimization from backend optimization work if needed,' showing disciplined handoff rather than scope creep. The only deliverables are performance profiling, diagnosis, a single optimization, re-measurement, and documentation—no unrequested additions."
+          },
+          {
+            "criterionId": "risk_awareness",
+            "score": 5,
+            "evidence": "The plan identifies four substantive, non-generic risks: (1) scope ambiguity ('unclear scope of lots of cards') with mitigation to profile conservatively and adjust; (2) root cause outside UI rendering ('external API/payload') with mitigation to inspect network waterfalls; (3) UX regression from virtualization ('blank spaces, scroll position loss') with mitigation to test incrementally and involve QA; (4) future regression without monitoring, with mitigation to add CI/CD tests. Each risk has a concrete mitigation tied to a specific step. Missing: no mention of accessibility impact (virtualization can break screen reader navigation if not handled), though this may not apply to a board of cards depending on the context."
+          }
+        ],
+        "overallComment": "This is a well-structured performance plan that follows industry best practice: measure first, diagnose root cause, optimize targeted, verify at scale, prevent regression. It appropriately flags the main ambiguities in the ticket (target card count, unknown root cause) and mitigates them with early profiling. The test strategy is specific enough to catch real regressions, and the risks section demonstrates genuine engineering caution around UX and scope."
+      },
+      "averageScore": 4.8,
+      "passed": true,
+      "weakest": []
+    },
+    "stageRuns": [
+      {
+        "stage": "requirements",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 302,
+          "outputTokens": 571
+        },
+        "latencyMs": 5522,
+        "estimatedCostUsd": 0.003157,
+        "failureReason": null,
+        "violations": []
+      },
+      {
+        "stage": "planning",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 521,
+          "outputTokens": 1205
+        },
+        "latencyMs": 13098,
+        "estimatedCostUsd": 0.006545999999999999,
+        "failureReason": null,
+        "violations": []
+      },
+      {
+        "stage": "evaluation",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 1910,
+          "outputTokens": 896
+        },
+        "latencyMs": 10159,
+        "estimatedCostUsd": 0.00639,
+        "failureReason": null,
+        "violations": []
+      }
+    ]
+  },
+  "totals": {
+    "usage": {
+      "inputTokens": 2733,
+      "outputTokens": 2672
+    },
+    "latencyMs": 28779,
+    "estimatedCostUsd": 0.016093,
+    "modelCalls": 3
+  }
+}

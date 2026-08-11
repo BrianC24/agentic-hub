@@ -1,0 +1,495 @@
+{
+  "fixtureKey": "missing-acceptance-criteria",
+  "model": "claude-haiku-4-5",
+  "recordedAt": "2026-08-11T22-16-41-445Z",
+  "exchanges": [
+    {
+      "request": {
+        "system": "You extract engineering requirements from a Jira-style ticket.\n\nReturn a single JSON object with exactly these fields:\n- summary: one or two sentences describing what the ticket asks for.\n- explicitRequirements: array of { id, text, sourceQuote } — things the ticket states directly. sourceQuote must be a verbatim substring of the ticket.\n- impliedRequirements: array of { id, text } — things a competent engineer would infer but the ticket does not state. Omit sourceQuote here.\n- ambiguities: array of { question, why } — genuine ambiguities that would change the implementation.\n- missingInformation: array of strings — information needed before work can start.\n- clarificationNeeded: boolean — true only when the ticket cannot responsibly proceed without a human answer.\n\nRules:\n- Do not invent requirements the ticket does not support. An empty array is a valid answer.\n- Prefer flagging an ambiguity over guessing an interpretation.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178\nType: feature\nPriority: low\nTitle: Add dark mode toggle to settings menu\n\nDescription:\nUsers have asked for a dark mode option. Add a toggle in account settings that switches the app's color theme.\n\nAcceptance criteria:\n(none provided)"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"summary\": \"Add a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.\",\n  \"explicitRequirements\": [\n    {\n      \"id\": \"ER1\",\n      \"text\": \"Add a toggle control in the account settings menu\",\n      \"sourceQuote\": \"Add a toggle in account settings\"\n    },\n    {\n      \"id\": \"ER2\",\n      \"text\": \"The toggle should switch the app's color theme\",\n      \"sourceQuote\": \"switches the app's color theme\"\n    }\n  ],\n  \"impliedRequirements\": [\n    {\n      \"id\": \"IR1\",\n      \"text\": \"Persist the user's dark mode preference so it applies on subsequent app visits\"\n    },\n    {\n      \"id\": \"IR2\",\n      \"text\": \"Apply the selected theme to all pages and components in the application\"\n    },\n    {\n      \"id\": \"IR3\",\n      \"text\": \"Define a dark color palette that is visually distinct from the light mode\"\n    }\n  ],\n  \"ambiguities\": [\n    {\n      \"question\": \"Should dark mode be the only theme option, or should there be a system/auto mode that follows device settings?\",\n      \"why\": \"The ticket only mentions 'light and dark modes' but does not specify if users should have a third 'follow system' option\"\n    },\n    {\n      \"question\": \"What specific colors constitute the 'dark mode' palette?\",\n      \"why\": \"The ticket does not define the color scheme, contrast ratios, or accessibility standards for dark mode\"\n    },\n    {\n      \"question\": \"Should the toggle take effect immediately or require a page reload?\",\n      \"why\": \"The ticket does not specify the user experience when toggling between themes\"\n    },\n    {\n      \"question\": \"Are there any components or sections that should NOT theme with dark mode?\",\n      \"why\": \"The ticket says 'app's color theme' but does not clarify scope boundaries\"\n    }\n  ],\n  \"missingInformation\": [\n    \"Dark mode color palette specifications (background, text, accent colors, etc.)\",\n    \"Acceptance criteria for the feature\",\n    \"Design mockups or wireframes showing the toggle placement and appearance\",\n    \"Accessibility requirements (WCAG compliance level, contrast ratios)\",\n    \"Whether dark mode should sync across multiple devices or be device-specific\"\n  ],\n  \"clarificationNeeded\": true\n}\n```",
+        "usage": {
+          "inputTokens": 310,
+          "outputTokens": 598
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 5256
+    },
+    {
+      "request": {
+        "system": "You write an implementation plan for an engineering ticket, given requirements already extracted from it.\n\nReturn a single JSON object with exactly these fields:\n- approach: two or three sentences describing the overall strategy.\n- steps: array of { id, description, addressesRequirements, files } — ordered implementation steps. addressesRequirements lists the requirement ids this step satisfies, and every id must be one you were given. files lists paths expected to change, and may be empty.\n- testStrategy: array of strings — how the change will be verified. At least one entry.\n- risks: array of { description, mitigation } — what could go wrong and what reduces that.\n- outOfScope: array of strings — work deliberately not being done.\n\nRules:\n- Every explicit requirement must be addressed by at least one step.\n- Only cite requirement ids that were given to you. Do not invent ids.\n- If the requirements say clarification is needed, still produce a plan, but list the open questions in risks.\n- Prefer the simplest approach that satisfies the requirements.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178: Add dark mode toggle to settings menu\n\nSummary of the request:\nAdd a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.\n\nExplicit requirements:\n- ER1: Add a toggle control in the account settings menu\n- ER2: The toggle should switch the app's color theme\n\nImplied requirements:\n- IR1: Persist the user's dark mode preference so it applies on subsequent app visits\n- IR2: Apply the selected theme to all pages and components in the application\n- IR3: Define a dark color palette that is visually distinct from the light mode\n\nOpen ambiguities:\n- Should dark mode be the only theme option, or should there be a system/auto mode that follows device settings?\n- What specific colors constitute the 'dark mode' palette?\n- Should the toggle take effect immediately or require a page reload?\n- Are there any components or sections that should NOT theme with dark mode?\n\nClarification needed before work starts: yes"
+          },
+          {
+            "role": "assistant",
+            "content": "```json\n{\n  \"approach\": \"Implement a dark mode toggle in the settings menu that persists user preference to local storage and applies a pre-defined dark color palette across the app. The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded during development.\",\n  \"steps\": [\n    {\n      \"id\": 1,\n      \"description\": \"Define dark mode color palette and create CSS custom properties (variables) for both light and dark themes that can be toggled via a class on the root element.\",\n      \"addressesRequirements\": [\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/styles/theme.css\",\n        \"src/styles/variables-dark.css\"\n      ]\n    },\n    {\n      \"id\": 2,\n      \"description\": \"Create a dark mode preference service that reads/writes the theme choice to localStorage and exposes methods to get current theme and subscribe to theme changes.\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/services/themeService.js\"\n      ]\n    },\n    {\n      \"id\": 3,\n      \"description\": \"Add a toggle control UI component to the account settings menu that calls the theme service to switch between light and dark modes.\",\n      \"addressesRequirements\": [\n        \"ER1\"\n      ],\n      \"files\": [\n        \"src/components/Settings/SettingsMenu.jsx\",\n        \"src/components/Settings/DarkModeToggle.jsx\"\n      ]\n    },\n    {\n      \"id\": 4,\n      \"description\": \"Integrate theme service into the app root component to apply the persisted theme on app load and listen for theme changes to update the DOM class that activates dark mode styles.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/App.jsx\"\n      ]\n    },\n    {\n      \"id\": 5,\n      \"description\": \"Update existing component stylesheets to use CSS custom properties instead of hardcoded colors, ensuring all pages and components respect the active theme.\",\n      \"addressesRequirements\": [\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/styles/components.css\",\n        \"src/pages/*.css\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Unit test themeService to verify localStorage persistence and theme state changes\",\n    \"Integration test that toggle in settings menu correctly triggers theme switch and updates DOM\",\n    \"Manual browser test that dark mode colors render correctly across all pages and components\",\n    \"Manual test that refreshing the page restores the user's previously selected theme from localStorage\",\n    \"Visual regression test to compare light and dark mode renders of key pages\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on whether immediate theme switching or page reload is expected could cause user experience issues if implementation choice is wrong.\",\n      \"mitigation\": \"Clarify with product owner before step 3. Immediate switching is typically preferred; if reload is needed, document in release notes.\"\n    },\n    {\n      \"description\": \"Lack of defined dark color palette could result in poor contrast or inconsistent design across components.\",\n      \"mitigation\": \"Obtain dark mode design specifications from design team before step 1. Use WCAG contrast guidelines as fallback minimum.\"\n    },\n    {\n      \"description\": \"CSS custom properties may not be supported in older browsers if legacy support is required.\",\n      \"mitigation\": \"Confirm browser support requirements early. If needed, use CSS-in-JS or fallback strategies.\"\n    },\n    {\n      \"description\": \"Third-party components or embedded content may not respect the theme toggle.\",\n      \"mitigation\": \"Test all third-party libraries during step 5. Document any components that cannot be themed and flag for separate enhancement tickets.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Implementing system/auto mode that follows device OS dark mode preference\",\n    \"Adding additional theme options beyond light and dark\",\n    \"Animating or transitioning between theme changes\",\n    \"Creating an admin panel to customize theme colors\",\n    \"Accessibility audit of color contrast in both modes (assumed to be done separately)\"\n  ]\n}\n```"
+          },
+          {
+            "role": "user",
+            "content": "Your previous response failed validation:\n\n- steps.0.id: Invalid input: expected string, received number\n- steps.1.id: Invalid input: expected string, received number\n- steps.2.id: Invalid input: expected string, received number\n- steps.3.id: Invalid input: expected string, received number\n- steps.4.id: Invalid input: expected string, received number\n\nReturn the corrected JSON object only. Do not explain the error or apologize."
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"approach\": \"Implement a dark mode toggle in the settings menu that persists user preference to local storage and applies a pre-defined dark color palette across the app. The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded during development.\",\n  \"steps\": [\n    {\n      \"id\": 1,\n      \"description\": \"Define dark mode color palette and create CSS custom properties (variables) for both light and dark themes that can be toggled via a class on the root element.\",\n      \"addressesRequirements\": [\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/styles/theme.css\",\n        \"src/styles/variables-dark.css\"\n      ]\n    },\n    {\n      \"id\": 2,\n      \"description\": \"Create a dark mode preference service that reads/writes the theme choice to localStorage and exposes methods to get current theme and subscribe to theme changes.\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/services/themeService.js\"\n      ]\n    },\n    {\n      \"id\": 3,\n      \"description\": \"Add a toggle control UI component to the account settings menu that calls the theme service to switch between light and dark modes.\",\n      \"addressesRequirements\": [\n        \"ER1\"\n      ],\n      \"files\": [\n        \"src/components/Settings/SettingsMenu.jsx\",\n        \"src/components/Settings/DarkModeToggle.jsx\"\n      ]\n    },\n    {\n      \"id\": 4,\n      \"description\": \"Integrate theme service into the app root component to apply the persisted theme on app load and listen for theme changes to update the DOM class that activates dark mode styles.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/App.jsx\"\n      ]\n    },\n    {\n      \"id\": 5,\n      \"description\": \"Update existing component stylesheets to use CSS custom properties instead of hardcoded colors, ensuring all pages and components respect the active theme.\",\n      \"addressesRequirements\": [\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/styles/components.css\",\n        \"src/pages/*.css\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Unit test themeService to verify localStorage persistence and theme state changes\",\n    \"Integration test that toggle in settings menu correctly triggers theme switch and updates DOM\",\n    \"Manual browser test that dark mode colors render correctly across all pages and components\",\n    \"Manual test that refreshing the page restores the user's previously selected theme from localStorage\",\n    \"Visual regression test to compare light and dark mode renders of key pages\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on whether immediate theme switching or page reload is expected could cause user experience issues if implementation choice is wrong.\",\n      \"mitigation\": \"Clarify with product owner before step 3. Immediate switching is typically preferred; if reload is needed, document in release notes.\"\n    },\n    {\n      \"description\": \"Lack of defined dark color palette could result in poor contrast or inconsistent design across components.\",\n      \"mitigation\": \"Obtain dark mode design specifications from design team before step 1. Use WCAG contrast guidelines as fallback minimum.\"\n    },\n    {\n      \"description\": \"CSS custom properties may not be supported in older browsers if legacy support is required.\",\n      \"mitigation\": \"Confirm browser support requirements early. If needed, use CSS-in-JS or fallback strategies.\"\n    },\n    {\n      \"description\": \"Third-party components or embedded content may not respect the theme toggle.\",\n      \"mitigation\": \"Test all third-party libraries during step 5. Document any components that cannot be themed and flag for separate enhancement tickets.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Implementing system/auto mode that follows device OS dark mode preference\",\n    \"Adding additional theme options beyond light and dark\",\n    \"Animating or transitioning between theme changes\",\n    \"Creating an admin panel to customize theme colors\",\n    \"Accessibility audit of color contrast in both modes (assumed to be done separately)\"\n  ]\n}\n```",
+        "usage": {
+          "inputTokens": 487,
+          "outputTokens": 1033
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 9704
+    },
+    {
+      "request": {
+        "system": "You write an implementation plan for an engineering ticket, given requirements already extracted from it.\n\nReturn a single JSON object with exactly these fields:\n- approach: two or three sentences describing the overall strategy.\n- steps: array of { id, description, addressesRequirements, files } — ordered implementation steps. addressesRequirements lists the requirement ids this step satisfies, and every id must be one you were given. files lists paths expected to change, and may be empty.\n- testStrategy: array of strings — how the change will be verified. At least one entry.\n- risks: array of { description, mitigation } — what could go wrong and what reduces that.\n- outOfScope: array of strings — work deliberately not being done.\n\nRules:\n- Every explicit requirement must be addressed by at least one step.\n- Only cite requirement ids that were given to you. Do not invent ids.\n- If the requirements say clarification is needed, still produce a plan, but list the open questions in risks.\n- Prefer the simplest approach that satisfies the requirements.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178: Add dark mode toggle to settings menu\n\nSummary of the request:\nAdd a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.\n\nExplicit requirements:\n- ER1: Add a toggle control in the account settings menu\n- ER2: The toggle should switch the app's color theme\n\nImplied requirements:\n- IR1: Persist the user's dark mode preference so it applies on subsequent app visits\n- IR2: Apply the selected theme to all pages and components in the application\n- IR3: Define a dark color palette that is visually distinct from the light mode\n\nOpen ambiguities:\n- Should dark mode be the only theme option, or should there be a system/auto mode that follows device settings?\n- What specific colors constitute the 'dark mode' palette?\n- Should the toggle take effect immediately or require a page reload?\n- Are there any components or sections that should NOT theme with dark mode?\n\nClarification needed before work starts: yes"
+          },
+          {
+            "role": "assistant",
+            "content": "```json\n{\n  \"approach\": \"Implement a dark mode toggle in the settings menu that persists user preference to local storage and applies a pre-defined dark color palette across the app. The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded during development.\",\n  \"steps\": [\n    {\n      \"id\": 1,\n      \"description\": \"Define dark mode color palette and create CSS custom properties (variables) for both light and dark themes that can be toggled via a class on the root element.\",\n      \"addressesRequirements\": [\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/styles/theme.css\",\n        \"src/styles/variables-dark.css\"\n      ]\n    },\n    {\n      \"id\": 2,\n      \"description\": \"Create a dark mode preference service that reads/writes the theme choice to localStorage and exposes methods to get current theme and subscribe to theme changes.\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/services/themeService.js\"\n      ]\n    },\n    {\n      \"id\": 3,\n      \"description\": \"Add a toggle control UI component to the account settings menu that calls the theme service to switch between light and dark modes.\",\n      \"addressesRequirements\": [\n        \"ER1\"\n      ],\n      \"files\": [\n        \"src/components/Settings/SettingsMenu.jsx\",\n        \"src/components/Settings/DarkModeToggle.jsx\"\n      ]\n    },\n    {\n      \"id\": 4,\n      \"description\": \"Integrate theme service into the app root component to apply the persisted theme on app load and listen for theme changes to update the DOM class that activates dark mode styles.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/App.jsx\"\n      ]\n    },\n    {\n      \"id\": 5,\n      \"description\": \"Update existing component stylesheets to use CSS custom properties instead of hardcoded colors, ensuring all pages and components respect the active theme.\",\n      \"addressesRequirements\": [\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/styles/components.css\",\n        \"src/pages/*.css\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Unit test themeService to verify localStorage persistence and theme state changes\",\n    \"Integration test that toggle in settings menu correctly triggers theme switch and updates DOM\",\n    \"Manual browser test that dark mode colors render correctly across all pages and components\",\n    \"Manual test that refreshing the page restores the user's previously selected theme from localStorage\",\n    \"Visual regression test to compare light and dark mode renders of key pages\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on whether immediate theme switching or page reload is expected could cause user experience issues if implementation choice is wrong.\",\n      \"mitigation\": \"Clarify with product owner before step 3. Immediate switching is typically preferred; if reload is needed, document in release notes.\"\n    },\n    {\n      \"description\": \"Lack of defined dark color palette could result in poor contrast or inconsistent design across components.\",\n      \"mitigation\": \"Obtain dark mode design specifications from design team before step 1. Use WCAG contrast guidelines as fallback minimum.\"\n    },\n    {\n      \"description\": \"CSS custom properties may not be supported in older browsers if legacy support is required.\",\n      \"mitigation\": \"Confirm browser support requirements early. If needed, use CSS-in-JS or fallback strategies.\"\n    },\n    {\n      \"description\": \"Third-party components or embedded content may not respect the theme toggle.\",\n      \"mitigation\": \"Test all third-party libraries during step 5. Document any components that cannot be themed and flag for separate enhancement tickets.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Implementing system/auto mode that follows device OS dark mode preference\",\n    \"Adding additional theme options beyond light and dark\",\n    \"Animating or transitioning between theme changes\",\n    \"Creating an admin panel to customize theme colors\",\n    \"Accessibility audit of color contrast in both modes (assumed to be done separately)\"\n  ]\n}\n```"
+          },
+          {
+            "role": "user",
+            "content": "Your previous response failed validation:\n\n- steps.0.id: Invalid input: expected string, received number\n- steps.1.id: Invalid input: expected string, received number\n- steps.2.id: Invalid input: expected string, received number\n- steps.3.id: Invalid input: expected string, received number\n- steps.4.id: Invalid input: expected string, received number\n\nReturn the corrected JSON object only. Do not explain the error or apologize."
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"approach\": \"Implement a dark mode toggle in the settings menu that persists user preference to local storage and applies a pre-defined dark color palette across the app. The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded during development.\",\n  \"steps\": [\n    {\n      \"id\": \"1\",\n      \"description\": \"Define dark mode color palette and create CSS custom properties (variables) for both light and dark themes that can be toggled via a class on the root element.\",\n      \"addressesRequirements\": [\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/styles/theme.css\",\n        \"src/styles/variables-dark.css\"\n      ]\n    },\n    {\n      \"id\": \"2\",\n      \"description\": \"Create a dark mode preference service that reads/writes the theme choice to localStorage and exposes methods to get current theme and subscribe to theme changes.\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/services/themeService.js\"\n      ]\n    },\n    {\n      \"id\": \"3\",\n      \"description\": \"Add a toggle control UI component to the account settings menu that calls the theme service to switch between light and dark modes.\",\n      \"addressesRequirements\": [\n        \"ER1\"\n      ],\n      \"files\": [\n        \"src/components/Settings/SettingsMenu.jsx\",\n        \"src/components/Settings/DarkModeToggle.jsx\"\n      ]\n    },\n    {\n      \"id\": \"4\",\n      \"description\": \"Integrate theme service into the app root component to apply the persisted theme on app load and listen for theme changes to update the DOM class that activates dark mode styles.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/App.jsx\"\n      ]\n    },\n    {\n      \"id\": \"5\",\n      \"description\": \"Update existing component stylesheets to use CSS custom properties instead of hardcoded colors, ensuring all pages and components respect the active theme.\",\n      \"addressesRequirements\": [\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/styles/components.css\",\n        \"src/pages/*.css\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Unit test themeService to verify localStorage persistence and theme state changes\",\n    \"Integration test that toggle in settings menu correctly triggers theme switch and updates DOM\",\n    \"Manual browser test that dark mode colors render correctly across all pages and components\",\n    \"Manual test that refreshing the page restores the user's previously selected theme from localStorage\",\n    \"Visual regression test to compare light and dark mode renders of key pages\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on whether immediate theme switching or page reload is expected could cause user experience issues if implementation choice is wrong.\",\n      \"mitigation\": \"Clarify with product owner before step 3. Immediate switching is typically preferred; if reload is needed, document in release notes.\"\n    },\n    {\n      \"description\": \"Lack of defined dark color palette could result in poor contrast or inconsistent design across components.\",\n      \"mitigation\": \"Obtain dark mode design specifications from design team before step 1. Use WCAG contrast guidelines as fallback minimum.\"\n    },\n    {\n      \"description\": \"CSS custom properties may not be supported in older browsers if legacy support is required.\",\n      \"mitigation\": \"Confirm browser support requirements early. If needed, use CSS-in-JS or fallback strategies.\"\n    },\n    {\n      \"description\": \"Third-party components or embedded content may not respect the theme toggle.\",\n      \"mitigation\": \"Test all third-party libraries during step 5. Document any components that cannot be themed and flag for separate enhancement tickets.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Implementing system/auto mode that follows device OS dark mode preference\",\n    \"Adding additional theme options beyond light and dark\",\n    \"Animating or transitioning between theme changes\",\n    \"Creating an admin panel to customize theme colors\",\n    \"Accessibility audit of color contrast in both modes (assumed to be done separately)\"\n  ]\n}\n```",
+        "usage": {
+          "inputTokens": 1627,
+          "outputTokens": 1033
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 5017
+    },
+    {
+      "request": {
+        "system": "You evaluate an engineering implementation plan against a fixed rubric.\n\nScore every criterion exactly once, on a 1-5 integer scale, using the anchors given. For each score, cite the specific part of the plan that justifies it — quote it or name the step id. A score without concrete evidence is not acceptable.\n\nReturn a single JSON object with exactly these fields:\n- scores: array of { criterionId, score, evidence } — one entry per rubric criterion, no more, no less.\n- overallComment: two or three sentences summarising the plan's fitness.\n\nRules:\n- Be critical. A plan that merely looks organised is not automatically good.\n- Do not re-check things that are mechanically verifiable (whether every requirement id appears, whether a test strategy field is non-empty). Those are checked elsewhere. Judge quality, not presence.\n- Respond with the JSON object only. No prose, no markdown code fence.\n\nRubric:\n- approach_soundness (Approach soundness): Is the proposed approach a reasonable way to satisfy the requirements?\n  Anchors: 5 = the approach is what an experienced engineer would choose. 3 = workable but with an avoidable flaw. 1 = would not produce a working result.\n- unsupported_assumptions (Unsupported assumptions): Does the plan invent constraints, behaviour, or context the ticket and requirements never established?\n  Anchors: 5 = every claim traces to the ticket or is flagged as an assumption. 3 = one minor unflagged assumption. 1 = substantive invented requirements.\n- test_strategy_quality (Test strategy quality): Would the stated tests actually catch a regression in the behaviour being changed?\n  Anchors: 5 = tests target the specific behaviour and its failure modes. 3 = generic tests that would catch only gross breakage. 1 = tests that would pass regardless of correctness.\n- scope_discipline (Scope discipline): Does the plan stay within what was asked?\n  Anchors: 5 = does exactly what the ticket requires. 3 = minor unrequested additions. 1 = substantial unrequested rework.\n- risk_awareness (Risk awareness): Does the plan identify the risks that actually matter for this change, including security and accessibility where relevant?\n  Anchors: 5 = names the genuine risks with useful mitigations. 3 = generic risks only. 1 = misses an obvious serious risk.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178: Add dark mode toggle to settings menu\n\nUsers have asked for a dark mode option. Add a toggle in account settings that switches the app's color theme.\n\nRequirements identified:\n- ER1: Add a toggle control in the account settings menu\n- ER2: The toggle should switch the app's color theme\n\nAmbiguities raised:\n- Should dark mode be the only theme option, or should there be a system/auto mode that follows device settings?\n- What specific colors constitute the 'dark mode' palette?\n- Should the toggle take effect immediately or require a page reload?\n- Are there any components or sections that should NOT theme with dark mode?\n\nPlan under evaluation:\n{\n  \"approach\": \"Implement a dark mode toggle in the settings menu that persists user preference to local storage and applies a pre-defined dark color palette across the app. The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded during development.\",\n  \"steps\": [\n    {\n      \"id\": \"1\",\n      \"description\": \"Define dark mode color palette and create CSS custom properties (variables) for both light and dark themes that can be toggled via a class on the root element.\",\n      \"addressesRequirements\": [\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/styles/theme.css\",\n        \"src/styles/variables-dark.css\"\n      ]\n    },\n    {\n      \"id\": \"2\",\n      \"description\": \"Create a dark mode preference service that reads/writes the theme choice to localStorage and exposes methods to get current theme and subscribe to theme changes.\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/services/themeService.js\"\n      ]\n    },\n    {\n      \"id\": \"3\",\n      \"description\": \"Add a toggle control UI component to the account settings menu that calls the theme service to switch between light and dark modes.\",\n      \"addressesRequirements\": [\n        \"ER1\"\n      ],\n      \"files\": [\n        \"src/components/Settings/SettingsMenu.jsx\",\n        \"src/components/Settings/DarkModeToggle.jsx\"\n      ]\n    },\n    {\n      \"id\": \"4\",\n      \"description\": \"Integrate theme service into the app root component to apply the persisted theme on app load and listen for theme changes to update the DOM class that activates dark mode styles.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/App.jsx\"\n      ]\n    },\n    {\n      \"id\": \"5\",\n      \"description\": \"Update existing component stylesheets to use CSS custom properties instead of hardcoded colors, ensuring all pages and components respect the active theme.\",\n      \"addressesRequirements\": [\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/styles/components.css\",\n        \"src/pages/*.css\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Unit test themeService to verify localStorage persistence and theme state changes\",\n    \"Integration test that toggle in settings menu correctly triggers theme switch and updates DOM\",\n    \"Manual browser test that dark mode colors render correctly across all pages and components\",\n    \"Manual test that refreshing the page restores the user's previously selected theme from localStorage\",\n    \"Visual regression test to compare light and dark mode renders of key pages\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on whether immediate theme switching or page reload is expected could cause user experience issues if implementation choice is wrong.\",\n      \"mitigation\": \"Clarify with product owner before step 3. Immediate switching is typically preferred; if reload is needed, document in release notes.\"\n    },\n    {\n      \"description\": \"Lack of defined dark color palette could result in poor contrast or inconsistent design across components.\",\n      \"mitigation\": \"Obtain dark mode design specifications from design team before step 1. Use WCAG contrast guidelines as fallback minimum.\"\n    },\n    {\n      \"description\": \"CSS custom properties may not be supported in older browsers if legacy support is required.\",\n      \"mitigation\": \"Confirm browser support requirements early. If needed, use CSS-in-JS or fallback strategies.\"\n    },\n    {\n      \"description\": \"Third-party components or embedded content may not respect the theme toggle.\",\n      \"mitigation\": \"Test all third-party libraries during step 5. Document any components that cannot be themed and flag for separate enhancement tickets.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Implementing system/auto mode that follows device OS dark mode preference\",\n    \"Adding additional theme options beyond light and dark\",\n    \"Animating or transitioning between theme changes\",\n    \"Creating an admin panel to customize theme colors\",\n    \"Accessibility audit of color contrast in both modes (assumed to be done separately)\"\n  ]\n}"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"scores\": [\n    {\n      \"criterionId\": \"approach_soundness\",\n      \"score\": 4,\n      \"evidence\": \"The approach uses CSS custom properties (step 1), a dedicated theme service (step 2), and root-level DOM integration (step 4)—a sound, standard pattern for theme switching. However, the plan assumes 'immediate theme switching without page reload' as a design choice (stated in approach section) rather than clarifying this with stakeholders first, which slightly weakens soundness. Step 3's toggle and step 5's stylesheet updates are reasonable. The only minor weakness is that the plan does not detail how to handle components that may render before the theme service initializes, though this is a solvable detail.\"\n    },\n    {\n      \"criterionId\": \"unsupported_assumptions\",\n      \"score\": 3,\n      \"evidence\": \"The plan flags three key ambiguities in its opening but then resolves them unilaterally: 'The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded.' While the plan does flag these as assumptions in the approach section, it proceeds without requiring stakeholder sign-off. The risk section acknowledges the immediate-switching assumption ('Clarify with product owner before step 3'), which is good, but the approach has already committed to it. The assumption that 'all components should support theming' is reasonable but not explicitly called out as needing validation. This is not invention of substantial new requirements, but the assumptions are not fully traced to ticket agreement.\"\n    },\n    {\n      \"criterionId\": \"test_strategy_quality\",\n      \"score\": 4,\n      \"evidence\": \"Tests target the core behaviour: themeService persistence (unit), toggle triggering theme switch and DOM update (integration), visual correctness (manual and regression), and persistence across reload (manual). These would catch most regressions. However, the test strategy lacks automated checks for contrast compliance in dark mode, even though the risk section mentions WCAG guidelines. Integration tests should verify that the toggle updates the root element's class name and that dependent components respond. The manual browser tests are reasonable but not automated. A minor gap: no test explicitly checks that localStorage fails gracefully or that theme applies before first paint to avoid flash of unstyled content.\"\n    },\n    {\n      \"criterionId\": \"scope_discipline\",\n      \"score\": 5,\n      \"evidence\": \"The plan delivers exactly what was asked: ER1 (toggle in settings, step 3) and ER2 (switches app color theme, steps 1, 4, 5). The outOfScope section clearly excludes system auto mode, additional themes, animations, admin customization, and accessibility audits—all reasonable exclusions given the ticket's simplicity. No unrequested rework or features are added. Step 5 (updating component stylesheets) is necessary to fulfill ER2 and is not scope creep.\"\n    },\n    {\n      \"criterionId\": \"risk_awareness\",\n      \"score\": 4,\n      \"evidence\": \"The plan identifies four genuine risks: ambiguity on immediate vs. reload switching (with mitigation: clarify with PO), undefined color palette (mitigation: get design specs and apply WCAG fallback), browser support for CSS custom properties (mitigation: confirm requirements early), and third-party component theming (mitigation: test during step 5 and document). These are the real risks for this change. However, the plan misses one non-trivial risk: flash of unstyled content (FOUC) if the theme service initializes asynchronously after the DOM renders—a user might see light mode briefly before dark mode applies. The security and accessibility surfaces are minimal for a theme toggle, so no serious omissions there. Accessibility of the toggle control itself is not mentioned but would fall under a general a11y audit.\"\n    }\n  ],\n  \"overallComment\": \"This is a well-structured plan that applies sound engineering practices (CSS variables, service layer, persistent storage) to a straightforward feature request. The main weaknesses are that key ambiguities are resolved unilaterally without explicit stakeholder confirmation (despite being flagged as risks), and the test strategy, while reasonable, lacks automation for some important checks and does not address flash-of-unstyled-content risk. The scope is tight and realistic.\"\n}\n```",
+        "usage": {
+          "inputTokens": 1740,
+          "outputTokens": 1004
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 11787
+    }
+  ],
+  "run": {
+    "id": "run_msp7z7bf",
+    "ticket": {
+      "id": "NWB-178",
+      "title": "Add dark mode toggle to settings menu",
+      "description": "Users have asked for a dark mode option. Add a toggle in account settings that switches the app's color theme.",
+      "type": "feature",
+      "priority": "low",
+      "acceptanceCriteria": [],
+      "labels": [
+        "settings",
+        "theming"
+      ],
+      "reporter": "design-lead@example.com"
+    },
+    "stage": "awaiting_approval",
+    "createdAt": 1786486569675,
+    "updatedAt": 1786486601445,
+    "events": [
+      {
+        "at": 1786486569675,
+        "stage": "intake",
+        "kind": "stage_entered",
+        "message": "Run created from ticket"
+      },
+      {
+        "at": 1786486569675,
+        "stage": "requirements",
+        "kind": "stage_entered",
+        "message": "Extracting requirements"
+      },
+      {
+        "at": 1786486574933,
+        "stage": "requirements",
+        "kind": "stage_succeeded",
+        "message": "Extracted 2 explicit requirement(s), 4 ambiguity(ies)"
+      },
+      {
+        "at": 1786486574933,
+        "stage": "planning",
+        "kind": "stage_entered",
+        "message": "Planning implementation"
+      },
+      {
+        "at": 1786486589657,
+        "stage": "validation",
+        "kind": "stage_entered",
+        "message": "Running deterministic checks"
+      },
+      {
+        "at": 1786486589657,
+        "stage": "validation",
+        "kind": "stage_succeeded",
+        "message": "6 check(s): 0 failed, 0 warned"
+      },
+      {
+        "at": 1786486589657,
+        "stage": "evaluation",
+        "kind": "stage_entered",
+        "message": "Evaluating plan against rubric"
+      },
+      {
+        "at": 1786486601445,
+        "stage": "evaluation",
+        "kind": "stage_succeeded",
+        "message": "Rubric average 4.00 (pass)"
+      },
+      {
+        "at": 1786486601445,
+        "stage": "awaiting_approval",
+        "kind": "stage_entered",
+        "message": "Plan ready for human approval"
+      }
+    ],
+    "repairRounds": 0,
+    "approval": null,
+    "failureReason": null
+  },
+  "artifacts": {
+    "requirements": {
+      "summary": "Add a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.",
+      "explicitRequirements": [
+        {
+          "id": "ER1",
+          "text": "Add a toggle control in the account settings menu",
+          "sourceQuote": "Add a toggle in account settings"
+        },
+        {
+          "id": "ER2",
+          "text": "The toggle should switch the app's color theme",
+          "sourceQuote": "switches the app's color theme"
+        }
+      ],
+      "impliedRequirements": [
+        {
+          "id": "IR1",
+          "text": "Persist the user's dark mode preference so it applies on subsequent app visits"
+        },
+        {
+          "id": "IR2",
+          "text": "Apply the selected theme to all pages and components in the application"
+        },
+        {
+          "id": "IR3",
+          "text": "Define a dark color palette that is visually distinct from the light mode"
+        }
+      ],
+      "ambiguities": [
+        {
+          "question": "Should dark mode be the only theme option, or should there be a system/auto mode that follows device settings?",
+          "why": "The ticket only mentions 'light and dark modes' but does not specify if users should have a third 'follow system' option"
+        },
+        {
+          "question": "What specific colors constitute the 'dark mode' palette?",
+          "why": "The ticket does not define the color scheme, contrast ratios, or accessibility standards for dark mode"
+        },
+        {
+          "question": "Should the toggle take effect immediately or require a page reload?",
+          "why": "The ticket does not specify the user experience when toggling between themes"
+        },
+        {
+          "question": "Are there any components or sections that should NOT theme with dark mode?",
+          "why": "The ticket says 'app's color theme' but does not clarify scope boundaries"
+        }
+      ],
+      "missingInformation": [
+        "Dark mode color palette specifications (background, text, accent colors, etc.)",
+        "Acceptance criteria for the feature",
+        "Design mockups or wireframes showing the toggle placement and appearance",
+        "Accessibility requirements (WCAG compliance level, contrast ratios)",
+        "Whether dark mode should sync across multiple devices or be device-specific"
+      ],
+      "clarificationNeeded": true
+    },
+    "plan": {
+      "approach": "Implement a dark mode toggle in the settings menu that persists user preference to local storage and applies a pre-defined dark color palette across the app. The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded during development.",
+      "steps": [
+        {
+          "id": "1",
+          "description": "Define dark mode color palette and create CSS custom properties (variables) for both light and dark themes that can be toggled via a class on the root element.",
+          "addressesRequirements": [
+            "IR3"
+          ],
+          "files": [
+            "src/styles/theme.css",
+            "src/styles/variables-dark.css"
+          ]
+        },
+        {
+          "id": "2",
+          "description": "Create a dark mode preference service that reads/writes the theme choice to localStorage and exposes methods to get current theme and subscribe to theme changes.",
+          "addressesRequirements": [
+            "IR1"
+          ],
+          "files": [
+            "src/services/themeService.js"
+          ]
+        },
+        {
+          "id": "3",
+          "description": "Add a toggle control UI component to the account settings menu that calls the theme service to switch between light and dark modes.",
+          "addressesRequirements": [
+            "ER1"
+          ],
+          "files": [
+            "src/components/Settings/SettingsMenu.jsx",
+            "src/components/Settings/DarkModeToggle.jsx"
+          ]
+        },
+        {
+          "id": "4",
+          "description": "Integrate theme service into the app root component to apply the persisted theme on app load and listen for theme changes to update the DOM class that activates dark mode styles.",
+          "addressesRequirements": [
+            "ER2",
+            "IR2"
+          ],
+          "files": [
+            "src/App.jsx"
+          ]
+        },
+        {
+          "id": "5",
+          "description": "Update existing component stylesheets to use CSS custom properties instead of hardcoded colors, ensuring all pages and components respect the active theme.",
+          "addressesRequirements": [
+            "IR2"
+          ],
+          "files": [
+            "src/styles/components.css",
+            "src/pages/*.css"
+          ]
+        }
+      ],
+      "testStrategy": [
+        "Unit test themeService to verify localStorage persistence and theme state changes",
+        "Integration test that toggle in settings menu correctly triggers theme switch and updates DOM",
+        "Manual browser test that dark mode colors render correctly across all pages and components",
+        "Manual test that refreshing the page restores the user's previously selected theme from localStorage",
+        "Visual regression test to compare light and dark mode renders of key pages"
+      ],
+      "risks": [
+        {
+          "description": "Ambiguity on whether immediate theme switching or page reload is expected could cause user experience issues if implementation choice is wrong.",
+          "mitigation": "Clarify with product owner before step 3. Immediate switching is typically preferred; if reload is needed, document in release notes."
+        },
+        {
+          "description": "Lack of defined dark color palette could result in poor contrast or inconsistent design across components.",
+          "mitigation": "Obtain dark mode design specifications from design team before step 1. Use WCAG contrast guidelines as fallback minimum."
+        },
+        {
+          "description": "CSS custom properties may not be supported in older browsers if legacy support is required.",
+          "mitigation": "Confirm browser support requirements early. If needed, use CSS-in-JS or fallback strategies."
+        },
+        {
+          "description": "Third-party components or embedded content may not respect the theme toggle.",
+          "mitigation": "Test all third-party libraries during step 5. Document any components that cannot be themed and flag for separate enhancement tickets."
+        }
+      ],
+      "outOfScope": [
+        "Implementing system/auto mode that follows device OS dark mode preference",
+        "Adding additional theme options beyond light and dark",
+        "Animating or transitioning between theme changes",
+        "Creating an admin panel to customize theme colors",
+        "Accessibility audit of color contrast in both modes (assumed to be done separately)"
+      ]
+    },
+    "validation": {
+      "results": [
+        {
+          "id": "steps-present",
+          "label": "Plan contains at least one step",
+          "status": "pass",
+          "detail": "5 step(s)."
+        },
+        {
+          "id": "requirement-coverage",
+          "label": "Every explicit requirement is addressed",
+          "status": "pass",
+          "detail": "All 2 explicit requirement(s) claimed by at least one step."
+        },
+        {
+          "id": "test-strategy",
+          "label": "Plan states how the change will be verified",
+          "status": "pass",
+          "detail": "5 test-strategy item(s)."
+        },
+        {
+          "id": "orphan-steps",
+          "label": "Steps trace back to a requirement",
+          "status": "pass",
+          "detail": "Every step cites at least one requirement."
+        },
+        {
+          "id": "ambiguities-acknowledged",
+          "label": "Open ambiguities are carried into the plan",
+          "status": "pass",
+          "detail": "4 ambiguity(ies) raised; plan lists 4 risk(s)."
+        },
+        {
+          "id": "risks-mitigated",
+          "label": "Each risk has a mitigation",
+          "status": "pass",
+          "detail": "4 risk(s), all mitigated."
+        }
+      ],
+      "passed": true,
+      "failedCount": 0,
+      "warnedCount": 0
+    },
+    "evaluation": {
+      "evaluation": {
+        "scores": [
+          {
+            "criterionId": "approach_soundness",
+            "score": 4,
+            "evidence": "The approach uses CSS custom properties (step 1), a dedicated theme service (step 2), and root-level DOM integration (step 4)—a sound, standard pattern for theme switching. However, the plan assumes 'immediate theme switching without page reload' as a design choice (stated in approach section) rather than clarifying this with stakeholders first, which slightly weakens soundness. Step 3's toggle and step 5's stylesheet updates are reasonable. The only minor weakness is that the plan does not detail how to handle components that may render before the theme service initializes, though this is a solvable detail."
+          },
+          {
+            "criterionId": "unsupported_assumptions",
+            "score": 3,
+            "evidence": "The plan flags three key ambiguities in its opening but then resolves them unilaterally: 'The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded.' While the plan does flag these as assumptions in the approach section, it proceeds without requiring stakeholder sign-off. The risk section acknowledges the immediate-switching assumption ('Clarify with product owner before step 3'), which is good, but the approach has already committed to it. The assumption that 'all components should support theming' is reasonable but not explicitly called out as needing validation. This is not invention of substantial new requirements, but the assumptions are not fully traced to ticket agreement."
+          },
+          {
+            "criterionId": "test_strategy_quality",
+            "score": 4,
+            "evidence": "Tests target the core behaviour: themeService persistence (unit), toggle triggering theme switch and DOM update (integration), visual correctness (manual and regression), and persistence across reload (manual). These would catch most regressions. However, the test strategy lacks automated checks for contrast compliance in dark mode, even though the risk section mentions WCAG guidelines. Integration tests should verify that the toggle updates the root element's class name and that dependent components respond. The manual browser tests are reasonable but not automated. A minor gap: no test explicitly checks that localStorage fails gracefully or that theme applies before first paint to avoid flash of unstyled content."
+          },
+          {
+            "criterionId": "scope_discipline",
+            "score": 5,
+            "evidence": "The plan delivers exactly what was asked: ER1 (toggle in settings, step 3) and ER2 (switches app color theme, steps 1, 4, 5). The outOfScope section clearly excludes system auto mode, additional themes, animations, admin customization, and accessibility audits—all reasonable exclusions given the ticket's simplicity. No unrequested rework or features are added. Step 5 (updating component stylesheets) is necessary to fulfill ER2 and is not scope creep."
+          },
+          {
+            "criterionId": "risk_awareness",
+            "score": 4,
+            "evidence": "The plan identifies four genuine risks: ambiguity on immediate vs. reload switching (with mitigation: clarify with PO), undefined color palette (mitigation: get design specs and apply WCAG fallback), browser support for CSS custom properties (mitigation: confirm requirements early), and third-party component theming (mitigation: test during step 5 and document). These are the real risks for this change. However, the plan misses one non-trivial risk: flash of unstyled content (FOUC) if the theme service initializes asynchronously after the DOM renders—a user might see light mode briefly before dark mode applies. The security and accessibility surfaces are minimal for a theme toggle, so no serious omissions there. Accessibility of the toggle control itself is not mentioned but would fall under a general a11y audit."
+          }
+        ],
+        "overallComment": "This is a well-structured plan that applies sound engineering practices (CSS variables, service layer, persistent storage) to a straightforward feature request. The main weaknesses are that key ambiguities are resolved unilaterally without explicit stakeholder confirmation (despite being flagged as risks), and the test strategy, while reasonable, lacks automation for some important checks and does not address flash-of-unstyled-content risk. The scope is tight and realistic."
+      },
+      "averageScore": 4,
+      "passed": true,
+      "weakest": [
+        {
+          "criterionId": "unsupported_assumptions",
+          "score": 3,
+          "evidence": "The plan flags three key ambiguities in its opening but then resolves them unilaterally: 'The implementation will assume immediate theme switching without page reload, a binary light/dark choice (no system auto mode), and that all components should support theming unless explicitly excluded.' While the plan does flag these as assumptions in the approach section, it proceeds without requiring stakeholder sign-off. The risk section acknowledges the immediate-switching assumption ('Clarify with product owner before step 3'), which is good, but the approach has already committed to it. The assumption that 'all components should support theming' is reasonable but not explicitly called out as needing validation. This is not invention of substantial new requirements, but the assumptions are not fully traced to ticket agreement."
+        }
+      ]
+    },
+    "stageRuns": [
+      {
+        "stage": "requirements",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 310,
+          "outputTokens": 598
+        },
+        "latencyMs": 5256,
+        "estimatedCostUsd": 0.0033,
+        "failureReason": null,
+        "violations": []
+      },
+      {
+        "stage": "planning",
+        "round": 0,
+        "status": "success",
+        "attempts": 2,
+        "usage": {
+          "inputTokens": 2114,
+          "outputTokens": 2066
+        },
+        "latencyMs": 14721,
+        "estimatedCostUsd": 0.012444,
+        "failureReason": null,
+        "violations": [
+          {
+            "path": "steps.0.id",
+            "message": "Invalid input: expected string, received number"
+          },
+          {
+            "path": "steps.1.id",
+            "message": "Invalid input: expected string, received number"
+          },
+          {
+            "path": "steps.2.id",
+            "message": "Invalid input: expected string, received number"
+          },
+          {
+            "path": "steps.3.id",
+            "message": "Invalid input: expected string, received number"
+          },
+          {
+            "path": "steps.4.id",
+            "message": "Invalid input: expected string, received number"
+          }
+        ]
+      },
+      {
+        "stage": "evaluation",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 1740,
+          "outputTokens": 1004
+        },
+        "latencyMs": 11787,
+        "estimatedCostUsd": 0.0067599999999999995,
+        "failureReason": null,
+        "violations": []
+      }
+    ]
+  },
+  "totals": {
+    "usage": {
+      "inputTokens": 4164,
+      "outputTokens": 3668
+    },
+    "latencyMs": 31764,
+    "estimatedCostUsd": 0.022504,
+    "modelCalls": 4
+  }
+}

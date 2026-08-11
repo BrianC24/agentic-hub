@@ -6,7 +6,7 @@ export const PLANNING_SYSTEM_PROMPT = `You write an implementation plan for an e
 
 Return a single JSON object with exactly these fields:
 - approach: two or three sentences describing the overall strategy.
-- steps: array of { id, description, addressesRequirements, files } — ordered implementation steps. addressesRequirements lists the requirement ids this step satisfies, and every id must be one you were given. files lists paths expected to change, and may be empty.
+- steps: array of { id, description, addressesRequirements, files } — ordered implementation steps. id is a STRING label such as "S1", "S2" — never a bare number. addressesRequirements is an array of STRINGS listing the requirement ids this step satisfies, and every id must be one you were given. files is an array of STRINGS listing paths expected to change, and may be empty.
 - testStrategy: array of strings — how the change will be verified. At least one entry.
 - risks: array of { description, mitigation } — what could go wrong and what reduces that.
 - outOfScope: array of strings — work deliberately not being done.
