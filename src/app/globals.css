@@ -1,0 +1,133 @@
+:root {
+  /* Surfaces, layered back to front */
+  --bg: #fbfbfc;
+  --surface: #ffffff;
+  --surface-sunken: #f4f4f6;
+
+  /* Text, strongest to weakest */
+  --fg: #18181b;
+  --fg-muted: #52525b;
+  --fg-subtle: #8b8b95;
+
+  --border: #e4e4e8;
+  --border-strong: #d1d1d8;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-fg: #ffffff;
+  --accent-subtle: #eff4ff;
+
+  --success: #047857;
+  --success-subtle: #ecfdf5;
+  --error: #be123c;
+  --error-subtle: #fff1f3;
+
+  --ring: #2563eb;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2352525b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0b0d;
+    --surface: #141417;
+    --surface-sunken: #0f0f12;
+
+    --fg: #f4f4f5;
+    --fg-muted: #a1a1aa;
+    --fg-subtle: #71717a;
+
+    --border: #26262b;
+    --border-strong: #3a3a42;
+
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --accent-fg: #0b0b0d;
+    --accent-subtle: #14203a;
+
+    --success: #34d399;
+    --success-subtle: #0d2a20;
+    --error: #fb7185;
+    --error-subtle: #2c1119;
+
+    --ring: #60a5fa;
+
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23a1a1aa' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  }
+
+  html {
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  height: 100%;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: var(--fg);
+  background: var(--bg);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* One consistent focus treatment everywhere, including keyboard-only nav. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Visually hidden but still announced by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
