@@ -19,10 +19,17 @@ interface IntakeState {
 
 const INITIAL_STATE: IntakeState = { status: "idle", ticket: null, errors: [] };
 
-export function TicketIntakeForm() {
+export interface TicketIntakeFormProps {
+  /** Called with a schema-valid ticket plus the fixture it came from, if any. */
+  onValidated?: (ticket: Ticket, fixtureKey: string | null) => void;
+  busy?: boolean;
+}
+
+export function TicketIntakeForm({ onValidated, busy = false }: TicketIntakeFormProps = {}) {
   const formId = useId();
   const [values, setValues] = useState<TicketFormValues>(EMPTY_TICKET_FORM_VALUES);
   const [state, setState] = useState<IntakeState>(INITIAL_STATE);
+  const [fixtureKey, setFixtureKey] = useState<string | null>(null);
 
   const errorByPath = new Map(state.errors.map((error) => [error.path, error.message]));
 
@@ -35,6 +42,7 @@ export function TicketIntakeForm() {
     const result = parseTicketForm(values);
     if (result.success) {
       setState({ status: "success", ticket: result.ticket, errors: [] });
+      onValidated?.(result.ticket, fixtureKey);
     } else {
       setState({ status: "error", ticket: null, errors: result.errors });
     }
@@ -46,12 +54,21 @@ export function TicketIntakeForm() {
     const fixture = getTicketFixture(key);
     if (!fixture) return;
     setValues(ticketFormValuesFromTicket(fixture.ticket));
+    setFixtureKey(fixture.key);
     setState(INITIAL_STATE);
   }
 
   function handleReset() {
     setValues(EMPTY_TICKET_FORM_VALUES);
+    setFixtureKey(null);
     setState(INITIAL_STATE);
+  }
+
+  // Editing a loaded example detaches it from its recording, since the
+  // replayed responses no longer correspond to the ticket on screen.
+  function editField<K extends keyof TicketFormValues>(key: K, value: TicketFormValues[K]) {
+    setFixtureKey(null);
+    updateField(key, value);
   }
 
   return (
@@ -83,7 +100,7 @@ export function TicketIntakeForm() {
               mono
               error={errorByPath.get("id")}
               value={values.id}
-              onChange={(v) => updateField("id", v)}
+              onChange={(v) => editField("id", v)}
             />
             <Field
               id={`${formId}-reporter`}
@@ -91,7 +108,7 @@ export function TicketIntakeForm() {
               placeholder="pm@example.com"
               error={errorByPath.get("reporter")}
               value={values.reporter}
-              onChange={(v) => updateField("reporter", v)}
+              onChange={(v) => editField("reporter", v)}
             />
           </div>
 
@@ -101,7 +118,7 @@ export function TicketIntakeForm() {
             placeholder="Short summary of the request"
             error={errorByPath.get("title")}
             value={values.title}
-            onChange={(v) => updateField("title", v)}
+            onChange={(v) => editField("title", v)}
           />
 
           <div className={styles.field}>
@@ -115,7 +132,7 @@ export function TicketIntakeForm() {
               aria-describedby={
                 errorByPath.has("description") ? `${formId}-description-error` : undefined
               }
-              onChange={(e) => updateField("description", e.target.value)}
+              onChange={(e) => editField("description", e.target.value)}
             />
             {errorByPath.has("description") && (
               <span id={`${formId}-description-error`} className={styles.errorText}>
@@ -130,7 +147,7 @@ export function TicketIntakeForm() {
               <select
                 id={`${formId}-type`}
                 value={values.type}
-                onChange={(e) => updateField("type", e.target.value)}
+                onChange={(e) => editField("type", e.target.value)}
               >
                 <option value="feature">Feature</option>
                 <option value="bug">Bug</option>
@@ -142,7 +159,7 @@ export function TicketIntakeForm() {
               <select
                 id={`${formId}-priority`}
                 value={values.priority}
-                onChange={(e) => updateField("priority", e.target.value)}
+                onChange={(e) => editField("priority", e.target.value)}
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -159,7 +176,7 @@ export function TicketIntakeForm() {
               rows={4}
               placeholder="One per line"
               value={values.acceptanceCriteria}
-              onChange={(e) => updateField("acceptanceCriteria", e.target.value)}
+              onChange={(e) => editField("acceptanceCriteria", e.target.value)}
             />
             <span className={styles.hint}>
               Optional — an empty list is a valid, if incomplete, ticket. Requirement extraction
@@ -173,13 +190,18 @@ export function TicketIntakeForm() {
             placeholder="activity-log, export"
             error={errorByPath.get("labels")}
             value={values.labels}
-            onChange={(v) => updateField("labels", v)}
+            onChange={(v) => editField("labels", v)}
           />
         </form>
 
         <div className={styles.actions}>
-          <button type="submit" form={`${formId}-form`} className={styles.primaryButton}>
-            Validate ticket
+          <button
+            type="submit"
+            form={`${formId}-form`}
+            className={styles.primaryButton}
+            disabled={busy}
+          >
+            {busy ? "Running…" : onValidated ? "Validate and run" : "Validate ticket"}
           </button>
           <button type="button" className={styles.secondaryButton} onClick={handleReset}>
             Clear

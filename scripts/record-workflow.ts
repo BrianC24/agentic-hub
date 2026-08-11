@@ -15,7 +15,7 @@ import path from "node:path";
 import { config as loadEnv } from "dotenv";
 import { createAnthropicProvider, readLlmConfig } from "../src/lib/llm/config";
 import { RecordingProvider } from "../src/lib/llm/recording-provider";
-import { getTicketFixture, TICKET_FIXTURES } from "../src/lib/ticket/fixtures";
+import { TICKET_FIXTURES } from "../src/lib/ticket/fixtures";
 import { runWorkflow } from "../src/lib/workflow/orchestrator";
 
 loadEnv({ path: ".env.local", quiet: true });
