@@ -13,7 +13,7 @@ import styles from "./WorkflowPage.module.css";
 type RunState =
   | { status: "idle" }
   | { status: "running" }
-  | { status: "done"; result: WorkflowResult; mode: "replay" | "live"; model: string }
+  | { status: "done"; result: WorkflowResult; mode: "replay" | "live" | "none"; model: string }
   | { status: "error"; message: string };
 
 export function WorkflowPage() {
@@ -23,6 +23,9 @@ export function WorkflowPage() {
   const [models, setModels] = useState<SelectableModel[]>([]);
   const [model, setModel] = useState(DEFAULT_SELECTABLE_MODEL);
   const [fixtureKey, setFixtureKey] = useState<string | null>(null);
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [deciding, setDeciding] = useState(false);
+  const [decisionError, setDecisionError] = useState<string | null>(null);
 
   // The server decides whether live runs are possible; the client only asks.
   useEffect(() => {
@@ -36,14 +39,16 @@ export function WorkflowPage() {
       .catch(() => setLiveEnabled(false));
   }, []);
 
-  async function startRun(ticket: Ticket, key: string | null) {
+  async function startRun(submitted: Ticket, key: string | null) {
+    setTicket(submitted);
+    setDecisionError(null);
     setState({ status: "running" });
     try {
       const response = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ticket,
+          ticket: submitted,
           fixtureKey: key,
           model,
           mode: preferLive && liveEnabled ? "live" : "replay",
@@ -66,6 +71,41 @@ export function WorkflowPage() {
         status: "error",
         message: error instanceof Error ? error.message : "Network error",
       });
+    }
+  }
+
+  async function submitDecision(decision: "approved" | "rejected", note: string) {
+    if (state.status !== "done" || !ticket) return;
+    setDeciding(true);
+    setDecisionError(null);
+    try {
+      const response = await fetch("/api/run/decision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          decision,
+          note,
+          ticket,
+          model,
+          run: state.result.run,
+          artifacts: state.result.artifacts,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setDecisionError(payload.error ?? "Decision failed");
+        return;
+      }
+      setState({
+        status: "done",
+        result: payload as WorkflowResult,
+        mode: payload.mode,
+        model: payload.model,
+      });
+    } catch (error) {
+      setDecisionError(error instanceof Error ? error.message : "Network error");
+    } finally {
+      setDeciding(false);
     }
   }
 
@@ -158,7 +198,14 @@ export function WorkflowPage() {
         )}
 
         {state.status === "done" && (
-          <RunReport result={state.result} mode={state.mode} model={state.model} />
+          <RunReport
+            result={state.result}
+            mode={state.mode}
+            model={state.model}
+            onDecision={submitDecision}
+            deciding={deciding}
+            decisionError={decisionError}
+          />
         )}
       </main>
     </div>

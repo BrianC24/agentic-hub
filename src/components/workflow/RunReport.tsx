@@ -9,8 +9,12 @@ import styles from "./RunReport.module.css";
 
 export interface RunReportProps {
   result: WorkflowResult;
-  mode: "replay" | "live";
+  mode: "replay" | "live" | "none";
   model: string;
+  /** Absent when decisions cannot be acted on (e.g. a completed run). */
+  onDecision?: (decision: "approved" | "rejected", note: string) => void;
+  deciding?: boolean;
+  decisionError?: string | null;
 }
 
 const STATUS_CLASS: Record<CheckStatus, string> = {
@@ -27,20 +31,30 @@ const STATUS_LABEL: Record<CheckStatus, string> = {
 
 const CRITERION_LABEL = new Map(PLAN_RUBRIC.map((c) => [c.id, c.label]));
 
-export function RunReport({ result, mode, model }: RunReportProps) {
+export function RunReport({
+  result,
+  mode,
+  model,
+  onDecision,
+  deciding = false,
+  decisionError = null,
+}: RunReportProps) {
   const { run, artifacts, totals } = result;
   const reachedApproval = run.stage === "awaiting_approval";
+  const isComplete = run.stage === "complete";
 
   return (
     <div className={styles.report}>
       <div
-        className={`${styles.banner} ${reachedApproval ? styles.bannerOk : styles.bannerBad}`}
+        className={`${styles.banner} ${reachedApproval || isComplete ? styles.bannerOk : styles.bannerBad}`}
         role="status"
       >
         <span className={styles.statusDot} aria-hidden="true" />
         {reachedApproval
           ? "Plan ready for human approval"
-          : `Run ${run.stage}${run.failureReason ? ` — ${run.failureReason}` : ""}`}
+          : isComplete
+            ? `Approved${run.approval?.note ? ` — ${run.approval.note}` : ""}`
+            : `Run ${run.stage}${run.failureReason ? ` — ${run.failureReason}` : ""}`}
         <span className={styles.badge}>{mode}</span>
       </div>
 
@@ -163,7 +177,16 @@ export function RunReport({ result, mode, model }: RunReportProps) {
         ))}
       </Panel>
 
-      {reachedApproval && <ApprovalGate />}
+      {reachedApproval && onDecision && (
+        <ApprovalGate onDecision={onDecision} busy={deciding} error={decisionError} />
+      )}
+
+      {run.repairRounds > 0 && (
+        <p className={styles.nextStep}>
+          This plan is revision {run.repairRounds + 1}. Earlier versions were sent back by failed
+          checks, a low rubric score, or a reviewer.
+        </p>
+      )}
     </div>
   );
 }
@@ -215,31 +238,20 @@ function Panel({
 /**
  * The human gate.
  *
- * The decision is recorded client-side only: this build has no persistence, so
- * pretending the choice was durably stored would be dishonest. What it does
- * demonstrate is that the workflow stops and waits rather than self-approving.
+ * Approving ends the run. Rejecting sends the plan back to planning with the
+ * reviewer's note as feedback — the same repair path a failed rubric score
+ * takes, except the instruction is written by a person.
  */
-function ApprovalGate() {
+function ApprovalGate({
+  onDecision,
+  busy,
+  error,
+}: {
+  onDecision: (decision: "approved" | "rejected", note: string) => void;
+  busy: boolean;
+  error: string | null;
+}) {
   const [note, setNote] = useState("");
-  const [decision, setDecision] = useState<"approved" | "rejected" | null>(null);
-
-  if (decision) {
-    return (
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>Human approval</div>
-        <div className={styles.panelBody}>
-          <div className={styles.decided}>
-            <strong>{decision === "approved" ? "Approved" : "Rejected"}</strong>
-            {note && ` — ${note}`}
-            <div className={styles.checkDetail}>
-              Recorded in this session only. Persisting decisions across runs is a known
-              limitation.
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className={styles.panel}>
@@ -247,30 +259,45 @@ function ApprovalGate() {
       <div className={styles.panelBody}>
         <div className={styles.approval}>
           <label htmlFor="approval-note" className={styles.metricLabel}>
-            Note (optional)
+            Note {""}
+            <span className={styles.checkDetail}>
+              — on rejection this is sent to the model as the instruction for the next plan
+            </span>
           </label>
           <textarea
             id="approval-note"
             className={styles.approvalNote}
             value={note}
-            placeholder="Why are you approving or rejecting this plan?"
+            disabled={busy}
+            placeholder="e.g. No rollback step, and the migration is not reversible."
             onChange={(e) => setNote(e.target.value)}
           />
           <div className={styles.approvalActions}>
             <button
               type="button"
               className={styles.approveButton}
-              onClick={() => setDecision("approved")}
+              disabled={busy}
+              onClick={() => onDecision("approved", note)}
             >
-              Approve plan
+              {busy ? "Working…" : "Approve plan"}
             </button>
             <button
               type="button"
               className={styles.rejectButton}
-              onClick={() => setDecision("rejected")}
+              disabled={busy}
+              onClick={() => onDecision("rejected", note)}
             >
               Reject and replan
             </button>
+          </div>
+          {error && (
+            <div className={styles.errorText} role="alert">
+              {error}
+            </div>
+          )}
+          <div className={styles.checkDetail}>
+            Rejecting runs a real replan and costs a live model call. Decisions are not persisted —
+            a refresh loses the run.
           </div>
         </div>
       </div>
