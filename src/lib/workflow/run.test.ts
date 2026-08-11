@@ -62,6 +62,14 @@ describe("workflow state machine", () => {
     expect(run.approval?.decision).toBe("rejected");
   });
 
+  it("lets failed deterministic checks send a plan back before evaluation", () => {
+    // Cheaper than paying a judge to read a plan already known to be short.
+    let run = advanceTo("validation");
+    run = transition(run, "planning", "coverage check failed", 0);
+    expect(run.stage).toBe("planning");
+    expect(run.repairRounds).toBe(1);
+  });
+
   it("counts a loop back to planning as a repair round", () => {
     let run = advanceTo("evaluation");
     expect(run.repairRounds).toBe(0);
