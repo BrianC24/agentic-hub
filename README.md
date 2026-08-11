@@ -111,12 +111,18 @@ Stated limitations of the judge are in `src/lib/evaluation/rubric.ts`: it judges
 
 **Secrets.** Keys live in `.env.local` (gitignored); `.env.example` documents the variables with no values.
 
+## Deploying
+
+Deploy with **no environment variables** and it runs replay-only: the genuine
+workflow against recorded responses, unable to make a billable call regardless
+of what a request asks for. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 ## Running it
 
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm test         # 108 tests
+npm test         # 125 tests
 npm run lint
 npm run build
 ```
