@@ -45,14 +45,18 @@ export const CONTACT: ContactLink[] = [
 /**
  * Why this project exists, in the terms a hiring reader cares about.
  *
- * Deliberately claims the harness rather than the agent: the scarce skill is
- * making a nondeterministic system trustworthy, not calling a model.
+ * Grounded in first-hand experience rather than a diagnosis of what other
+ * teams get wrong — the earlier version opened by telling the industry it was
+ * doing it badly, which is a poor look on a page asking someone for a job.
+ *
+ * Still claims the harness rather than the agent: the scarce skill is making a
+ * nondeterministic system trustworthy, not calling a model.
  */
 export const PROJECT_PITCH = {
   heading: "Why I built this",
   body: [
-    "Most teams shipping AI features hit the same wall. The model works in the demo, it is unreliable in production, and there is no systematic way to know how unreliable. The usual response is a better prompt, which addresses none of the actual failure modes.",
-    "So I built the layer that answers those questions instead: bounded agent loops, schema-validated outputs with a repair path, deterministic checks where correctness is objective, a rubric judge only where judgment is genuinely required, and per-run cost and latency you can inspect.",
+    "I have shipped AI features in production, and the hard part was never the model call. It was knowing whether to trust what came back — and being able to show someone else why they should.",
+    "So I built the layer that answers that: bounded loops, schema-validated outputs with a repair path, deterministic checks where correctness is objective, a rubric judge only where judgment is genuinely required, and per-run cost and latency you can inspect.",
     "The ticket-to-implementation-plan domain is the setting. The harness is the point.",
   ],
 } as const;
