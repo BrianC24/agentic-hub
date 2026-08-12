@@ -48,9 +48,9 @@ export default function HowItWorks() {
             Six stages, and what each one stops from going wrong
           </h1>
           <p className={styles.lede}>
-            The model call is the easy part. Everything below exists because a model will hand you
-            something that looks right and isn&apos;t, and something has to catch that. Every number
-            on this page is pulled straight from the code it describes.
+            The model call is the easy part. Everything below exists because a model can hand you
+            something that looks right and isn&apos;t, and something has to catch it. Every number on
+            this page comes from the code it describes.
           </p>
         </div>
 
@@ -187,9 +187,9 @@ export default function HowItWorks() {
             <h2 className={styles.sectionTitle}>What a model judges, and what it does not</h2>
             <p className={styles.sectionLede}>
               Anything I can check objectively gets checked in code. Requirement coverage is just
-              set math, and asking a model to work it out again would be slower, cost more, and
-              sometimes get it wrong. These {RUBRIC_CRITERIA.length} criteria are the parts that
-              actually need judgment.
+              counting, and asking a model to do it again would be slower, cost more, and sometimes
+              get it wrong. These {RUBRIC_CRITERIA.length} criteria are the parts that really need
+              judgment.
             </p>
           </div>
           <div className={styles.tableWrap}>

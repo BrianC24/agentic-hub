@@ -45,7 +45,9 @@ describe("profile", () => {
     // nondeterministic system trustworthy, not calling a model.
     const pitch = PROJECT_PITCH.body.join(" ").toLowerCase();
     expect(pitch).toContain("harness");
-    expect(pitch).toMatch(/bounded|schema-validated|deterministic/);
+    // Matches the idea rather than one phrasing, so plainer wording does not
+    // fail a test that is really about positioning.
+    expect(pitch).toMatch(/schema|bounded|validat|deterministic/);
   });
 
   it("has a summary, skills, and interests", () => {

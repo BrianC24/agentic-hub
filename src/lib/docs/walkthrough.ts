@@ -38,7 +38,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 1,
     title: "Ticket intake",
     what: "Checks the ticket against a schema before anything else runs.",
-    why: "Bad input should fail right here, not three stages and two model calls later. Acceptance criteria are optional on purpose. A ticket without them is incomplete, not invalid, and pointing out that gap is a later stage's job.",
+    why: "Bad input should fail here instead of two model calls later. Acceptance criteria are optional on purpose, since a ticket without them is incomplete rather than invalid, and pointing that out is a later stage's job.",
     sources: ["src/lib/ticket/schema.ts", "src/components/ticket-intake/TicketIntakeForm.tsx"],
     evidence: [
       "Rejects a ticket with an unknown priority, a missing title, or a non-object body.",
@@ -50,7 +50,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 2,
     title: "Requirement extraction",
     what: "Turns the ticket text into explicit requirements, implied ones, open questions, and what's missing.",
-    why: "A schema catches shape, not honesty. Perfectly valid JSON can cite a requirement the ticket never had. So every explicit requirement has to come with a quote, and I check that quote against the actual ticket text. Whitespace and case are ignored, so a quote that runs across a line break still passes, but a paraphrase gets rejected. Constrained decoding wouldn't catch this one, because the JSON is already well formed.",
+    why: "A schema only checks the shape of the response. It can't tell you whether the content is true. A model can return perfectly valid JSON that cites a requirement the ticket never contained. So every explicit requirement has to include a quote, and I check that the quote really appears in the ticket. I ignore whitespace and capitalization, so a quote that runs across a line break still passes, but a reworded one gets rejected. Constrained decoding wouldn't help here, because the JSON was already valid.",
     sources: [
       "src/lib/requirements/schema.ts",
       "src/lib/requirements/prompt.ts",
@@ -66,7 +66,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 3,
     title: "Implementation planning",
     what: "Produces an approach, ordered steps, a test strategy, risks, and what's out of scope.",
-    why: "Each step has to list the requirement ids it covers. That one field turns coverage from an opinion into arithmetic I can check. It also opens up a new way to cheat, which is making up ids, so a step can only cite ids that actually exist.",
+    why: "Each step has to list the requirement ids it covers, which lets me check coverage in normal code instead of asking a model. It does open up a way to cheat, since a model could make up ids, so a step is only allowed to use ids that already exist.",
     sources: ["src/lib/planning/schema.ts", "src/lib/planning/prompt.ts"],
     evidence: [
       "The first live runs came back with step ids as numbers in all 3 cases. The schema caught every one and the repair loop fixed them.",
@@ -78,7 +78,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 4,
     title: "Deterministic checks",
     what: "Six checks over the plan that don't need a model: coverage, test strategy, orphan steps, risks without mitigations, whether open questions carried through, and whether there are steps at all.",
-    why: "If something can be checked objectively, I check it in code. Asking a model whether every requirement is covered would be slower, cost more, and sometimes get the counting wrong. These run before the judge, so a plan I already know is short never costs an evaluation call. Warnings don't block anything. They're judgment calls, so they go to the person instead.",
+    why: "If I can check something objectively, I check it in code. Asking a model whether every requirement is covered would be slower, cost money, and sometimes get the counting wrong. These run before the judge, so I never pay to evaluate a plan I already know is incomplete. Warnings don't block anything, since they're judgment calls and belong to the person reviewing.",
     sources: ["src/lib/validation/checks.ts"],
     evidence: [
       "Free and instant. No model call, no network.",
@@ -90,7 +90,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 5,
     title: "Rubric evaluation",
     what: `An LLM judge scores ${PLAN_RUBRIC.length} criteria from 1–5 against written anchors, with mandatory evidence per score. Passing threshold: ${PASSING_THRESHOLD}.`,
-    why: "Only the stuff that actually needs judgment gets to the model. The judge has to score every criterion exactly once. Without that rule it can quietly skip the one it would score badly, and the average goes up for free. The JSON still looks fine, so you would never notice unless you check.",
+    why: "Only the parts that really need judgment go to the model. The judge has to score every criterion once. Without that rule it can skip the one it would score badly, and the average goes up. The JSON still looks fine, so you wouldn't notice unless you check.",
     sources: ["src/lib/evaluation/rubric.ts", "src/lib/evaluation/schema.ts"],
     evidence: [
       "A scoring that skips, repeats, or invents a criterion gets rejected.",
@@ -102,7 +102,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 6,
     title: "Human approval",
     what: "The run stops and waits. A person approves it, or rejects it with a reason.",
-    why: "This is the part I think matters most. The workflow never approves itself, because verification is the job now. Models are good enough that plausible and correct look identical on the screen, and the person reading it is the last check before something half-thought-out gets built and shipped. Everything upstream exists to make that review fast and specific instead of a vibe check: the citations are already verified, the coverage math is already done, so the reviewer can spend their attention on the parts only a person can catch. And rejecting sends it back to planning instead of killing the run, with whatever the reviewer wrote becoming the instruction for the next plan. So a rejection is feedback, not a veto.",
+    why: "This is the part I think matters most. The workflow never approves itself. A model can write something that looks right faster than anyone can read it, so a person has to check it before the work gets built. I tried to make that check quick by handling the boring parts first. The quotes are already verified and the coverage is already counted, so the reviewer can spend their time on what only a person can catch. Rejecting doesn't kill the run either. It goes back to planning, and whatever the reviewer wrote becomes the instruction for the next plan.",
     sources: ["src/lib/workflow/replan.ts", "src/app/api/run/decision/route.ts"],
     evidence: [
       'Tried it live. Rejecting with "no rollback step, and the export is not paginated" came back with a plan that handled both.',
@@ -127,8 +127,8 @@ export interface ArchitectureContrast {
 export const ARCHITECTURE = {
   claim: "A workflow, not an agent.",
   body: [
-    "The control flow is TypeScript. The model never gets tools, never picks what happens next, and never decides it's done. It gets asked three questions, and every answer is checked before the next one goes out.",
-    "Each call is a fresh conversation. Planning knows about the requirements because my code drops them into the planning prompt, not because anything gets remembered between calls.",
+    "The control flow is TypeScript. The model has no tools, doesn't pick what happens next, and doesn't decide when it's finished. It gets asked three questions, and I check every answer before sending the next one.",
+    "Each call starts fresh. Planning only knows about the requirements because my code puts them in the prompt. Nothing is remembered between calls.",
   ],
   contrasts: [
     {
@@ -155,7 +155,7 @@ export const ARCHITECTURE = {
   /** Where the deterministic half ends and an autonomous one would begin. */
   handoff: {
     heading: "Where an agent would come in",
-    body: "Writing the code. You can't lay those steps out ahead of time. There's no way to know which files need reading, how many edits it takes, or what a failing test will turn out to mean, and the stopping condition is \"the tests pass\", which it has to find out for itself. So the natural split is a workflow up to approval and an agent after it, with the human gate sitting right on the seam. That's the last cheap moment before something expensive and unpredictable kicks off. That half isn't built, and the run report says so.",
+    body: "Writing the code. You can't plan those steps ahead of time. You don't know which files need reading, how many edits it will take, or what a failing test actually means, and the job is only finished once the tests pass, which it has to find out by trying. So the split would be a workflow up to approval and an agent after it, with the human gate in between. That's the last cheap moment before something slow and unpredictable starts. That half isn't built, and the run report says so.",
   },
 } as const;
 
