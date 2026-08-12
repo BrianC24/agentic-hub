@@ -11,7 +11,7 @@ export const PROFILE = {
   focus: "AI Products & Agentic Workflows",
   location: "Los Angeles, CA",
   summary:
-    "Senior Frontend Engineer with 8+ years building React and TypeScript applications across AI, enterprise, IoT, and analytics products. I have shipped AI-powered support tooling, real-time guidance, conversation summarization, Salesforce integrations, and knowledge-graph experiences.",
+    "Senior Frontend Engineer with 8+ years building React and TypeScript apps across AI, enterprise, IoT, and analytics products. I've shipped AI-powered support tooling, real-time guidance, conversation summarization, Salesforce integrations, and knowledge graph experiences.",
 } as const;
 
 export interface ContactLink {
@@ -46,7 +46,7 @@ export const CONTACT: ContactLink[] = [
  * Why this project exists, in the terms a hiring reader cares about.
  *
  * Grounded in first-hand experience rather than a diagnosis of what other
- * teams get wrong — the earlier version opened by telling the industry it was
+ * teams get wrong. The earlier version opened by telling the industry it was
  * doing it badly, which is a poor look on a page asking someone for a job.
  *
  * Still claims the harness rather than the agent: the scarce skill is making a
@@ -55,9 +55,10 @@ export const CONTACT: ContactLink[] = [
 export const PROJECT_PITCH = {
   heading: "Why I built this",
   body: [
-    "I have shipped AI features in production, and the hard part was never the model call. It was knowing whether to trust what came back — and being able to show someone else why they should.",
-    "So I built the layer that answers that: bounded loops, schema-validated outputs with a repair path, deterministic checks where correctness is objective, a rubric judge only where judgment is genuinely required, and per-run cost and latency you can inspect.",
-    "The ticket-to-implementation-plan domain is the setting. The harness is the point.",
+    "I've shipped AI features in production, and the hard part was never the model call. It was knowing whether I could trust what came back, and being able to show someone else why.",
+    "So I built the layer that answers that. Bounded loops, output checked against a schema with a repair path when it fails, plain code checks for anything you can verify objectively, an LLM judge only where you actually need judgment, and cost and latency tracked on every run.",
+    "It also stops and waits for a person before anything gets approved. That gate is deliberate. When a model can produce something plausible faster than anyone can check it, verification is the actual work, and the human sitting there is the last thing standing between a half-thought-out plan and a shipped feature. My job upstream is to make that review fast and specific instead of a gut call.",
+    "Turning tickets into plans is just the setting. The harness is the point.",
   ],
 } as const;
 
@@ -74,11 +75,11 @@ export const ROLES: Role[] = [
     title: "Software Engineer II",
     period: "Oct 2025 – Aug 2026",
     highlights: [
-      "Built an AI-powered React and TypeScript Chrome extension with centralized customer notes, improving customer continuity by preserving context and reducing repeated questions.",
-      "Built frontend experiences for an AI Knowledge Graph consolidating multiple enterprise sources, accelerating cross-team ramp-up.",
-      "Developed interfaces for live AI interactions: progressive results, asynchronous states, error handling, and recovery paths.",
-      "Managed controlled rollouts with LaunchDarkly, and monitored health and adoption through Datadog and Amplitude.",
-      "Used Claude Code and LLM-assisted workflows to turn Jira requirements into implementation plans, scoped tasks, test strategies, and production features.",
+      "Built an AI-powered React and TypeScript Chrome extension with centralized customer notes, so business managers keep context between calls and stop asking customers the same things twice.",
+      "Built the frontend for an AI Knowledge Graph that pulled together several enterprise sources, which cut down how long it took people to get up to speed across teams.",
+      "Built interfaces for live AI interactions, including progressive results, async states, error handling, and recovery paths.",
+      "Ran controlled rollouts with LaunchDarkly and watched health and adoption in Datadog and Amplitude.",
+      "Used Claude Code and LLM-assisted workflows to turn Jira requirements into implementation plans, scoped tasks, test strategies, and shipped features.",
     ],
   },
   {
@@ -87,8 +88,8 @@ export const ROLES: Role[] = [
     period: "Jul 2019 – Jul 2025",
     highlights: [
       "Owned frontend architecture and delivery for React, Next.js, and TypeScript products across IoT, analytics, and data visualization.",
-      "Designed reusable component systems adopted across multiple projects, cutting duplicated frontend code by roughly 40%.",
-      "Improved data-intensive dashboard performance through virtualization, code splitting, caching, and more efficient rendering.",
+      "Built reusable component systems that got picked up across several projects, cutting duplicated frontend code by roughly 40%.",
+      "Made data-heavy dashboards faster with virtualization, code splitting, caching, and tighter rendering.",
     ],
   },
   {
@@ -146,4 +147,4 @@ export const INTERESTS = [
 ] as const;
 
 export const LOOKING_FOR =
-  "Open to senior frontend, product engineering, and AI product roles — remote or Los Angeles.";
+  "Open to senior frontend, product engineering, and AI product roles. Remote or Los Angeles.";

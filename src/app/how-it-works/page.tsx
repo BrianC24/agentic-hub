@@ -45,12 +45,12 @@ export default function HowItWorks() {
         <div className={styles.hero}>
           <p className={styles.eyebrow}>How it works</p>
           <h1 className={styles.title}>
-            Six stages, and the failure each one is designed to prevent
+            Six stages, and what each one stops from going wrong
           </h1>
           <p className={styles.lede}>
-            The model call is not the interesting part. Everything below exists because a model
-            will confidently return something plausible and wrong, and the system has to notice.
-            Every number on this page is read from the code that implements it.
+            The model call is the easy part. Everything below exists because a model will hand you
+            something that looks right and isn&apos;t, and something has to catch that. Every number
+            on this page is pulled straight from the code it describes.
           </p>
         </div>
 
@@ -64,8 +64,8 @@ export default function HowItWorks() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>What kind of system this is</h2>
             <p className={styles.sectionLede}>
-              <strong>{ARCHITECTURE.claim}</strong> The distinction is one question — who decides
-              what happens next, your code or the model?
+              <strong>{ARCHITECTURE.claim}</strong> It comes down to one question. Who decides what
+              happens next, your code or the model?
             </p>
           </div>
           <div className={styles.prose}>
@@ -103,8 +103,8 @@ export default function HowItWorks() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>The stages</h2>
             <p className={styles.sectionLede}>
-              Each one lists what it produces, the specific failure it prevents, verifiable
-              evidence, and the source that implements it.
+              Each one covers what it produces, what it stops from going wrong, what I can actually
+              show for it, and the code behind it.
             </p>
           </div>
 
@@ -150,8 +150,9 @@ export default function HowItWorks() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>Two repair mechanisms, deliberately separated</h2>
             <p className={styles.sectionLede}>
-              Both get called &ldquo;retry&rdquo;. They have different triggers, different feedback,
-              and different bounds, and conflating them hides what is actually happening in a run.
+              Both get called &ldquo;retry&rdquo;, but they fire for different reasons, feed back
+              different things, and have different limits. Lumping them together hides what actually
+              happened in a run.
             </p>
           </div>
           <div className={styles.cards}>
@@ -185,10 +186,10 @@ export default function HowItWorks() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>What a model judges, and what it does not</h2>
             <p className={styles.sectionLede}>
-              Anything objectively decidable is decided in code. Requirement coverage is set
-              arithmetic; asking a model to re-derive it would be slower, costlier, and
-              occasionally wrong about a fact that is simply computable. These{" "}
-              {RUBRIC_CRITERIA.length} criteria are what genuinely needs judgment.
+              Anything I can check objectively gets checked in code. Requirement coverage is just
+              set math, and asking a model to work it out again would be slower, cost more, and
+              sometimes get it wrong. These {RUBRIC_CRITERIA.length} criteria are the parts that
+              actually need judgment.
             </p>
           </div>
           <div className={styles.tableWrap}>
@@ -226,9 +227,9 @@ export default function HowItWorks() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>What running it actually taught me</h2>
             <p className={styles.sectionLede}>
-              Everything above was built against a mock whose responses I had guessed. These came
-              from real runs, and several are defects in my own assumptions rather than the
-              model&rsquo;s output.
+              Everything above was built against a mock, using responses I&rsquo;d guessed at. These
+              came out of real runs, and a few of them are mistakes in my own assumptions rather than
+              anything the model did.
             </p>
           </div>
           <div className={styles.cards}>
@@ -245,8 +246,8 @@ export default function HowItWorks() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>Measured cost per run</h2>
             <p className={styles.sectionLede}>
-              One full workflow on the same ticket. Read from the pricing table the application
-              itself uses, so these cannot drift from what the run report charges.
+              One full run on the same ticket. These come from the same pricing table the app uses,
+              so they can&apos;t drift from what the run report shows.
             </p>
           </div>
           <div className={styles.tableWrap}>
@@ -275,8 +276,8 @@ export default function HowItWorks() {
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>What would change at production scale</h2>
             <p className={styles.sectionLede}>
-              Written down because knowing the gap is part of the work. This plans changes; it does
-              not write code.
+              Worth writing down, because knowing what&apos;s missing is part of the job. This plans
+              the work. It doesn&apos;t write the code.
             </p>
           </div>
           <div className={styles.list}>

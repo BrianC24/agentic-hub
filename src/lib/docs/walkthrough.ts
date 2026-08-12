@@ -37,52 +37,52 @@ export const STAGES: WalkthroughStage[] = [
     id: "intake",
     number: 1,
     title: "Ticket intake",
-    what: "Validates a Jira-style ticket against a Zod schema before anything else runs.",
-    why: "Malformed input should fail at the boundary, not three stages and two model calls later. Acceptance criteria are deliberately optional — a ticket without them is incomplete, not invalid, and naming that gap is a later stage's job rather than something to reject here.",
+    what: "Checks the ticket against a schema before anything else runs.",
+    why: "Bad input should fail right here, not three stages and two model calls later. Acceptance criteria are optional on purpose. A ticket without them is incomplete, not invalid, and pointing out that gap is a later stage's job.",
     sources: ["src/lib/ticket/schema.ts", "src/components/ticket-intake/TicketIntakeForm.tsx"],
     evidence: [
       "Rejects a ticket with an unknown priority, a missing title, or a non-object body.",
-      "The same schema validates the API request, so the HTTP boundary and the UI cannot disagree.",
+      "The API uses the same schema as the form, so the two can't disagree about what a valid ticket is.",
     ],
   },
   {
     id: "requirements",
     number: 2,
     title: "Requirement extraction",
-    what: "Turns prose into explicit requirements, implied requirements, ambiguities, and missing information.",
-    why: "A schema catches shape, not honesty. Well-formed JSON can cite a requirement the ticket never contained. So every explicit requirement must carry a sourceQuote, and that quote is checked against the ticket's own words — whitespace-normalized and case-insensitive, so a quote spanning a line break still passes, but a paraphrase does not. Constrained decoding would not catch this, because the output is structurally perfect.",
+    what: "Turns the ticket text into explicit requirements, implied ones, open questions, and what's missing.",
+    why: "A schema catches shape, not honesty. Perfectly valid JSON can cite a requirement the ticket never had. So every explicit requirement has to come with a quote, and I check that quote against the actual ticket text. Whitespace and case are ignored, so a quote that runs across a line break still passes, but a paraphrase gets rejected. Constrained decoding wouldn't catch this one, because the JSON is already well formed.",
     sources: [
       "src/lib/requirements/schema.ts",
       "src/lib/requirements/prompt.ts",
       "src/lib/requirements/extract.ts",
     ],
     evidence: [
-      "A fabricated quote and a reordered paraphrase are both rejected in tests.",
-      "Implied requirements must not cite a quote — if the ticket states it, it is explicit.",
+      "Made-up quotes and reworded ones both get rejected in tests.",
+      "Implied requirements aren't allowed to cite a quote. If the ticket says it, it's explicit.",
     ],
   },
   {
     id: "planning",
     number: 3,
     title: "Implementation planning",
-    what: "Produces an approach, ordered steps, a test strategy, risks, and explicit out-of-scope items.",
-    why: "Each step must cite the requirement ids it satisfies. That single field is what turns coverage from an opinion into set arithmetic. It also creates a new way to cheat — inventing ids — so a step may only cite ids that actually exist.",
+    what: "Produces an approach, ordered steps, a test strategy, risks, and what's out of scope.",
+    why: "Each step has to list the requirement ids it covers. That one field turns coverage from an opinion into arithmetic I can check. It also opens up a new way to cheat, which is making up ids, so a step can only cite ids that actually exist.",
     sources: ["src/lib/planning/schema.ts", "src/lib/planning/prompt.ts"],
     evidence: [
-      "Live runs first returned step ids as numbers in 3 of 3 cases; the schema rejected every one and the repair loop recovered them.",
-      "Fixing the prompt to declare the field's type removed one model call per run: −25% calls, −32% cost, and rubric scores rose.",
+      "The first live runs came back with step ids as numbers in all 3 cases. The schema caught every one and the repair loop fixed them.",
+      "Saying in the prompt that the id is a string removed a whole model call per run. 25% fewer calls, 32% cheaper, and the scores went up.",
     ],
   },
   {
     id: "validation",
     number: 4,
     title: "Deterministic checks",
-    what: "Six objective checks over the plan: coverage, test strategy, orphan steps, unmitigated risks, acknowledged ambiguities, steps present.",
-    why: "Anything objectively decidable is decided in code. Asking a model whether every requirement is covered would be slower, more expensive, and occasionally wrong about arithmetic. These run before the judge, so a plan already known to be short never costs an evaluation call. Warnings do not block — they are judgment calls surfaced to the human.",
+    what: "Six checks over the plan that don't need a model: coverage, test strategy, orphan steps, risks without mitigations, whether open questions carried through, and whether there are steps at all.",
+    why: "If something can be checked objectively, I check it in code. Asking a model whether every requirement is covered would be slower, cost more, and sometimes get the counting wrong. These run before the judge, so a plan I already know is short never costs an evaluation call. Warnings don't block anything. They're judgment calls, so they go to the person instead.",
     sources: ["src/lib/validation/checks.ts"],
     evidence: [
-      "Free and instant: no model call, no network.",
-      "A failing check sends the plan back with the specific reasons attached, before any judge sees it.",
+      "Free and instant. No model call, no network.",
+      "A failed check sends the plan back with the reasons attached, before any judge sees it.",
     ],
   },
   {
@@ -90,23 +90,23 @@ export const STAGES: WalkthroughStage[] = [
     number: 5,
     title: "Rubric evaluation",
     what: `An LLM judge scores ${PLAN_RUBRIC.length} criteria from 1–5 against written anchors, with mandatory evidence per score. Passing threshold: ${PASSING_THRESHOLD}.`,
-    why: "Only what genuinely needs judgment reaches the model. The judge must score every criterion exactly once — without that rule it can silently omit the criterion it would score badly, and the average improves for free. That is structurally valid and semantically dishonest, and invisible unless you check for it.",
+    why: "Only the stuff that actually needs judgment gets to the model. The judge has to score every criterion exactly once. Without that rule it can quietly skip the one it would score badly, and the average goes up for free. The JSON still looks fine, so you would never notice unless you check.",
     sources: ["src/lib/evaluation/rubric.ts", "src/lib/evaluation/schema.ts"],
     evidence: [
-      "A scoring that skips, repeats, or invents a criterion is rejected.",
-      "A score with empty evidence is rejected — a bare number is unreviewable.",
+      "A scoring that skips, repeats, or invents a criterion gets rejected.",
+      "A score with no evidence gets rejected. A number on its own tells you nothing.",
     ],
   },
   {
     id: "approval",
     number: 6,
     title: "Human approval",
-    what: "The run stops. A person approves, or rejects with a written reason.",
-    why: "The workflow does not self-approve. Rejection is modelled as a loop back to planning rather than a terminal failure, and the reviewer's note becomes the instruction the next plan is generated against — so a rejection is feedback, not a veto.",
+    what: "The run stops and waits. A person approves it, or rejects it with a reason.",
+    why: "This is the part I think matters most. The workflow never approves itself, because verification is the job now. Models are good enough that plausible and correct look identical on the screen, and the person reading it is the last check before something half-thought-out gets built and shipped. Everything upstream exists to make that review fast and specific instead of a vibe check: the citations are already verified, the coverage math is already done, so the reviewer can spend their attention on the parts only a person can catch. And rejecting sends it back to planning instead of killing the run, with whatever the reviewer wrote becoming the instruction for the next plan. So a rejection is feedback, not a veto.",
     sources: ["src/lib/workflow/replan.ts", "src/app/api/run/decision/route.ts"],
     evidence: [
-      'Verified live: rejecting with "no rollback step, and the export is not paginated" produced a plan addressing both.',
-      "The caller holds only an opaque run id; the repair count lives server-side so the bound cannot be bypassed.",
+      'Tried it live. Rejecting with "no rollback step, and the export is not paginated" came back with a plan that handled both.',
+      "The browser only holds a run id. The repair count lives on the server, so you can't get extra tries by editing the request.",
     ],
   },
 ];
@@ -121,14 +121,14 @@ export interface ArchitectureContrast {
  * The frame everything else hangs on.
  *
  * Without it a reader assumes this is an agent, which inverts the point: the
- * properties worth demonstrating — bounded execution, an inspectable trace,
- * replayable runs — all come from the model *not* directing its own process.
+ * properties worth demonstrating (bounded execution, an inspectable trace,
+ * replayable runs) all come from the model *not* directing its own process.
  */
 export const ARCHITECTURE = {
   claim: "A workflow, not an agent.",
   body: [
-    "The control flow is TypeScript. The model is never given tools, never chooses what happens next, and never decides it is finished. It is asked three questions, and every answer is validated before the next one is asked.",
-    "Each call is a fresh conversation. Planning knows about requirements because the orchestrator renders the validated requirements into the planning prompt as structured data — not because anything is remembered between calls.",
+    "The control flow is TypeScript. The model never gets tools, never picks what happens next, and never decides it's done. It gets asked three questions, and every answer is checked before the next one goes out.",
+    "Each call is a fresh conversation. Planning knows about the requirements because my code drops them into the planning prompt, not because anything gets remembered between calls.",
   ],
   contrasts: [
     {
@@ -138,24 +138,24 @@ export const ARCHITECTURE = {
     },
     {
       dimension: "Tools",
-      workflow: "None. It returns text and nothing else.",
-      agent: "Calls them at will — read, write, search, execute",
+      workflow: "None. It returns text and that's it.",
+      agent: "Calls them whenever it wants: read, write, search, execute",
     },
     {
       dimension: "Termination",
-      workflow: "The state machine reaches a terminal stage",
-      agent: "The model decides it is done",
+      workflow: "The state machine hits an end state",
+      agent: "The model decides it's done",
     },
     {
       dimension: "What the trace looks like",
-      workflow: "A state machine you can draw in advance",
-      agent: "A transcript you read afterwards to find out what happened",
+      workflow: "A state machine you could draw before it runs",
+      agent: "A transcript you read afterward to find out what it did",
     },
   ] as ArchitectureContrast[],
   /** Where the deterministic half ends and an autonomous one would begin. */
   handoff: {
     heading: "Where an agent would come in",
-    body: "Writing the code. That genuinely cannot be specified in advance — you cannot predict which files need reading, how many edits it takes, or what a failing test will turn out to mean, and termination is \"the tests pass\", which has to be discovered. So the natural architecture is a workflow up to approval and an agent after it, with the human gate sitting exactly on that seam: it is the last cheap moment before an expensive, unpredictable process starts. That half is not built, and the run report says so.",
+    body: "Writing the code. You can't lay those steps out ahead of time. There's no way to know which files need reading, how many edits it takes, or what a failing test will turn out to mean, and the stopping condition is \"the tests pass\", which it has to find out for itself. So the natural split is a workflow up to approval and an agent after it, with the human gate sitting right on the seam. That's the last cheap moment before something expensive and unpredictable kicks off. That half isn't built, and the run report says so.",
   },
 } as const;
 
@@ -197,19 +197,19 @@ export interface Finding {
 export const FINDINGS: Finding[] = [
   {
     title: "A working repair loop hid a prompt defect",
-    body: "Planning returned numeric step ids in every live run. The loop recovered each time, so the system looked healthy — but the prompt had declared the field without its type and invited the error. Fixing the prompt removed a whole model call per run. Coercing the type in the schema would have hidden the defect and paid for it forever.",
+    body: "Planning returned numeric step ids in every live run. The loop fixed it each time, so everything looked fine, but the prompt had never said the field was a string. That's what caused it. Fixing the prompt removed a whole model call per run. I could have just coerced the type in the schema instead, but that would have buried the bug and kept paying for the extra call forever.",
   },
   {
     title: "Cost does not follow per-token pricing",
-    body: "Opus is 5× Haiku per token but 13× per run, because thinking is on by default and inflates output tokens. On the same ticket all three models scored an identical rubric average, so the extra spend bought no measurable quality.",
+    body: "Opus is 5x Haiku per token but 13x per run, because thinking is on by default and blows up the output. On the same ticket all three models landed on the same rubric average, so the extra money bought nothing I could measure.",
   },
   {
     title: "An eval that passed when nothing ran",
-    body: 'A coverage assertion checked that the check "did not fail" — trivially true on a run that never reached validation. An eval that passes when nothing happened is worse than no eval.',
+    body: 'A coverage assertion checked that the check "did not fail", which is automatically true on a run that never got as far as validation. An eval that passes when nothing happened is worse than having no eval.',
   },
   {
     title: "One sample is not a property",
-    body: "clarificationNeeded came back true for every fixture, so it looked like a reliable over-flagger and was pinned as a test. A later recording set had it discriminate correctly. The real property is nondeterminism — and the first conclusion made exactly the error this project warns about.",
+    body: "clarificationNeeded came back true for every fixture, so I figured it just over-flags and pinned that as a test. A later set of recordings had it get the answer right. So it's really just nondeterministic, and my first conclusion made exactly the mistake this project warns about.",
   },
   {
     title: "A code review found a spend vector",
@@ -235,5 +235,5 @@ export const PRODUCTION_GAPS = [
   "A sandboxed executor and repository access, so plans become diffs.",
   "Per-tenant isolation, and a shared store so the spend ceiling is not per-instance.",
   "The eval suite gating prompt changes in CI against a tracked pass-rate baseline.",
-  "Human-calibrated rubric scoring — the threshold is currently a guess with a decimal point.",
+  "Rubric scores calibrated against human raters. Right now the threshold is a guess with a decimal point.",
 ];

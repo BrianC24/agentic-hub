@@ -58,9 +58,9 @@ export default function About() {
               <p key={paragraph}>{paragraph}</p>
             ))}
             <p>
-              You can <Link href="/">run it yourself</Link> — the example tickets replay real
-              recorded model output at no cost — or read{" "}
-              <Link href="/how-it-works">how each stage works</Link> and why it is built that way.
+              You can <Link href="/">try it yourself</Link>. The example tickets replay real
+              recorded model output, so they cost nothing to run. There&apos;s also a walkthrough of{" "}
+              <Link href="/how-it-works">how each stage works</Link> and why I built it that way.
             </p>
           </div>
         </section>
