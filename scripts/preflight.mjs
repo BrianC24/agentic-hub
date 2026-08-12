@@ -12,6 +12,13 @@
  */
 import { connect } from "node:net";
 
+// Only meaningful for a developer starting a second server by hand. A platform
+// runner (Vercel, CI) manages its own ports, and a false positive there would
+// block a deploy for no reason.
+if (process.env.VERCEL || process.env.CI) {
+  process.exit(0);
+}
+
 const PORT = Number(process.env.PORT ?? 3000);
 const TIMEOUT_MS = 1000;
 
