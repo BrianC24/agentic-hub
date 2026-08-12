@@ -1,4 +1,5 @@
-import { addUsage, type ModelProvider } from "@/lib/llm/types";
+import type { StructuredRun } from "@/lib/llm/structured";
+import type { ModelProvider } from "@/lib/llm/types";
 import { evaluatePlan } from "@/lib/evaluation/evaluate";
 import { scoreEvaluation } from "@/lib/evaluation/schema";
 import { planImplementation } from "@/lib/planning/plan";
@@ -28,8 +29,7 @@ export interface ReplanInput {
 function toRecord(
   stage: StageRunRecord["stage"],
   round: number,
-  run: { status: "success" | "failed"; attempts: unknown[]; totalUsage: ReturnType<typeof addUsage>; totalLatencyMs: number; totalEstimatedCostUsd: number | null; failureReason: string | null },
-  violations: { path: string; message: string }[],
+  run: StructuredRun<unknown>,
 ): StageRunRecord {
   return {
     stage,
@@ -40,7 +40,7 @@ function toRecord(
     latencyMs: run.totalLatencyMs,
     estimatedCostUsd: run.totalEstimatedCostUsd,
     failureReason: run.failureReason,
-    violations,
+    violations: run.attempts.flatMap((a) => a.violations),
   };
 }
 
@@ -80,7 +80,7 @@ export async function replanAfterRejection(input: ReplanInput): Promise<Workflow
     priorFeedback: feedback,
   });
   artifacts.stageRuns.push(
-    toRecord("planning", round, planning, planning.attempts.flatMap((a) => a.violations)),
+    toRecord("planning", round, planning),
   );
 
   if (planning.status !== "success" || !planning.data) {
@@ -106,7 +106,7 @@ export async function replanAfterRejection(input: ReplanInput): Promise<Workflow
   run = transition(run, "evaluation", "Re-evaluating revised plan");
   const evaluation = await evaluatePlan(provider, ticket, artifacts.requirements, planning.data);
   artifacts.stageRuns.push(
-    toRecord("evaluation", round, evaluation, evaluation.attempts.flatMap((a) => a.violations)),
+    toRecord("evaluation", round, evaluation),
   );
 
   if (evaluation.status !== "success" || !evaluation.data) {

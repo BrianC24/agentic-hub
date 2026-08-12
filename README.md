@@ -89,7 +89,7 @@ default and inflates output. On this ticket all three scored the same rubric
 average, so the extra spend bought no measurable quality — which is the kind of
 thing you only learn by measuring it.
 
-**A false assumption the evals also caught.** `clarificationNeeded` came back `true` for every fixture, including the well-specified one. It over-flags and cannot gate anything on its own. That is pinned as a test rather than quietly corrected.
+**A false assumption the evals caught — twice.** `clarificationNeeded` first came back `true` for every fixture, including the well-specified one, so it looked like a reliable over-flagger. A later recording set had it discriminate correctly. It is a nondeterministic model judgement, not a signal, and nothing gates on it. The first version of that finding treated one sample as a property — the exact error the case study warns about.
 
 ## Deterministic vs. model-based evaluation
 
@@ -107,7 +107,9 @@ Stated limitations of the judge are in `src/lib/evaluation/rubric.ts`: it judges
 
 **Model output is untrusted input.** Nothing downstream reads a field that has not passed a schema. Beyond shape, two semantic rules catch dishonest-but-well-formed output: a cited quote must appear verbatim in the ticket, and a plan step may only cite requirement ids that exist. Constrained decoding would not catch either.
 
-**The deployment cannot be made to spend money.** `LLM_PROVIDER` defaults to `mock`. A request may *ask* for replay, but it can never escalate itself to live calls — live runs happen only when the server is configured for them, so a crafted request body cannot trigger spending on a public deployment.
+**The deployment cannot be made to spend money.** `LLM_PROVIDER` defaults to `mock`. A request may *ask* for live mode, but it is served a replay — escalation is impossible from the client side, and this is covered by tests rather than asserted.
+
+**A run's state is server-side.** An earlier version had the client post the whole run back when making an approval decision, which meant the repair bound was checked against a number the caller controlled: a forged run with `repairRounds: -9999` was accepted and made real billable calls. Validating the shape would not have fixed it, since a client sending `repairRounds: 0` forever still buys unlimited replans. Runs now live in a bounded, expiring server-side store and the caller holds only an unguessable id.
 
 **Secrets.** Keys live in `.env.local` (gitignored); `.env.example` documents the variables with no values.
 
@@ -122,7 +124,7 @@ of what a request asks for. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm test         # 125 tests
+npm test         # full suite
 npm run lint
 npm run build
 ```
@@ -172,7 +174,7 @@ No provider SDK is imported above `lib/llm`, so the model is swappable and mocka
 
 ## Testing
 
-108 tests. The most valuable ones replay real captured model output through the real workflow — a change that breaks the pipeline against actual responses fails there, where a hand-written mock would happily keep passing.
+The most valuable tests replay real captured model output through the real workflow — a change that breaks the pipeline against actual responses fails there, where a hand-written mock would happily keep passing.
 
 Failure paths are covered as first-class cases: schema violations and repair, exhausted retry budgets, non-retryable provider errors, non-JSON output, code-fence-wrapped JSON, illegal state transitions, exhausted recordings, and eval cases that produce no output at all.
 

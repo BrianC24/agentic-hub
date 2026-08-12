@@ -70,11 +70,42 @@ Everything up to this point was built against a mock whose responses I had *gues
 
 The tempting alternative was to coerce numbers to strings in the schema. That would have hidden the defect and kept paying for the extra call forever.
 
-**Finding 2: `clarificationNeeded` is useless as a gate.** It came back `true` for all three fixtures, including the well-specified one. The model over-flags. Rather than quietly dropping the field, that behaviour is pinned as a test, so a future prompt change that fixes it fails loudly instead of going unnoticed. Explicit-requirement count is used as the discriminator instead.
+**Finding 2: `clarificationNeeded` cannot be trusted as a gate.** It came back `true` for all three fixtures, including the well-specified one, so the first conclusion was "the model over-flags." A later recording set had it discriminate correctly, which makes the real property nondeterminism rather than bias — see the code-review section below for how that conclusion had to be revised. Explicit-requirement count is used as the discriminator instead, and nothing gates on the flag.
 
 **Finding 3: an assertion that passed vacuously.** The coverage assertion checked that the requirement-coverage check "did not fail" — which is trivially true on a run that never reached validation. It now requires the check to have run *and* passed. An eval that passes when nothing ran is worse than no eval.
 
 **Finding 4: replan rate is not a stable number.** Two consecutive full eval runs each had exactly one replan, but on *different* cases. Quoting a single run's replan rate as a property of the system would be wrong.
+
+## What a code review found
+
+Reviewing the finished tree turned up three defects, two of which were
+invisible from the outside.
+
+**A spend vector in the approval path.** The decision endpoint cast client
+input rather than validating it, and enforced the repair bound against a
+number the caller supplied. A forged run with `repairRounds: -9999` was
+accepted and made real billable calls — which falsified this project's own
+claim that no path runs unbounded. The instructive part is that the obvious
+fix is insufficient: validating the shape still lets a client send
+`repairRounds: 0` on every request. The state had to move server-side, with
+the caller holding only an opaque id.
+
+**Corrupted recordings.** Both providers stored request objects by reference
+while the repair loop mutates a single `messages` array in place, so every
+recorded exchange showed the *final* conversation rather than what was sent at
+that point. Replay still worked, because only responses are replayed — which
+is exactly why it went unnoticed. It had quietly corrupted the request side of
+the published evidence.
+
+**A blank stage rail.** `complete` is not a stage on the rail, so approving a
+run made every stage render as pending — the progress indicator emptied at the
+precise moment the user finished.
+
+Re-recording after the fixes also corrected a finding: `clarificationNeeded`
+turned out to be nondeterministic rather than reliably over-flagging. The
+earlier conclusion had treated a single sample as a property, which is the
+error this document warns about two sections above. Writing that warning did
+not prevent me from making it.
 
 ## Failure recovery
 

@@ -44,17 +44,14 @@ async function runToApproval(): Promise<WorkflowResult> {
 }
 
 describe("approveRun", () => {
-  it("completes the run and records the note", () => {
-    const base = { stage: "awaiting_approval", repairRounds: 0, events: [], approval: null } as never;
-    // Use a real run rather than a stub.
-    return runToApproval().then((result) => {
-      const approved = approveRun(result.run, "ship it");
-      expect(approved.stage).toBe("complete");
-      expect(approved.approval).toEqual(
-        expect.objectContaining({ decision: "approved", note: "ship it" }),
-      );
-      void base;
-    });
+  it("completes the run and records the note", async () => {
+    const result = await runToApproval();
+    const approved = approveRun(result.run, "ship it");
+
+    expect(approved.stage).toBe("complete");
+    expect(approved.approval).toEqual(
+      expect.objectContaining({ decision: "approved", note: "ship it" }),
+    );
   });
 });
 

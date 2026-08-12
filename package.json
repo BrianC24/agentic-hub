@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/preflight.mjs && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/preflight.mjs && next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "record": "tsx scripts/record-extraction.ts"
+    "record": "tsx scripts/record-extraction.ts",
+    "preflight": "node scripts/preflight.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
