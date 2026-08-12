@@ -12,7 +12,7 @@ export interface TopBarProps {
 const LINKS = [
   { href: "/", label: "Run" },
   { href: "/how-it-works", label: "How it works" },
-  { href: "/about", label: "About" },
+  { href: "/about", label: "About me" },
 ];
 
 /** Shared header, so the two views cannot drift apart visually. */
