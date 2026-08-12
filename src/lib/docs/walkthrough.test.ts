@@ -43,7 +43,7 @@ describe("walkthrough content integrity", () => {
   });
 
   it("gives every stage a reason, not just a description", () => {
-    // The "why" is the part that demonstrates judgement; a stage without one
+    // The "why" is the part that demonstrates judgment; a stage without one
     // is a tutorial entry.
     for (const stage of STAGES) {
       expect(stage.why.length, `${stage.id} has a thin rationale`).toBeGreaterThan(80);

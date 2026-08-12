@@ -11,7 +11,7 @@ export const PROFILE = {
   focus: "AI Products & Agentic Workflows",
   location: "Los Angeles, CA",
   summary:
-    "Senior Frontend Engineer with 8+ years building React and TypeScript applications across AI, enterprise, IoT, and analytics products. I have shipped AI-powered support tooling, real-time guidance, conversation summarisation, Salesforce integrations, and knowledge-graph experiences.",
+    "Senior Frontend Engineer with 8+ years building React and TypeScript applications across AI, enterprise, IoT, and analytics products. I have shipped AI-powered support tooling, real-time guidance, conversation summarization, Salesforce integrations, and knowledge-graph experiences.",
 } as const;
 
 export interface ContactLink {
@@ -52,7 +52,7 @@ export const PROJECT_PITCH = {
   heading: "Why I built this",
   body: [
     "Most teams shipping AI features hit the same wall. The model works in the demo, it is unreliable in production, and there is no systematic way to know how unreliable. The usual response is a better prompt, which addresses none of the actual failure modes.",
-    "So I built the layer that answers those questions instead: bounded agent loops, schema-validated outputs with a repair path, deterministic checks where correctness is objective, a rubric judge only where judgement is genuinely required, and per-run cost and latency you can inspect.",
+    "So I built the layer that answers those questions instead: bounded agent loops, schema-validated outputs with a repair path, deterministic checks where correctness is objective, a rubric judge only where judgment is genuinely required, and per-run cost and latency you can inspect.",
     "The ticket-to-implementation-plan domain is the setting. The harness is the point.",
   ],
 } as const;
@@ -70,7 +70,7 @@ export const ROLES: Role[] = [
     title: "Software Engineer II",
     period: "Oct 2025 – Aug 2026",
     highlights: [
-      "Built an AI-powered React and TypeScript Chrome extension with centralised customer notes, improving customer continuity by preserving context and reducing repeated questions.",
+      "Built an AI-powered React and TypeScript Chrome extension with centralized customer notes, improving customer continuity by preserving context and reducing repeated questions.",
       "Built frontend experiences for an AI Knowledge Graph consolidating multiple enterprise sources, accelerating cross-team ramp-up.",
       "Developed interfaces for live AI interactions: progressive results, asynchronous states, error handling, and recovery paths.",
       "Managed controlled rollouts with LaunchDarkly, and monitored health and adoption through Datadog and Amplitude.",
@@ -82,9 +82,9 @@ export const ROLES: Role[] = [
     title: "Senior Frontend Engineer",
     period: "Jul 2019 – Jul 2025",
     highlights: [
-      "Owned frontend architecture and delivery for React, Next.js, and TypeScript products across IoT, analytics, and data visualisation.",
+      "Owned frontend architecture and delivery for React, Next.js, and TypeScript products across IoT, analytics, and data visualization.",
       "Designed reusable component systems adopted across multiple projects, cutting duplicated frontend code by roughly 40%.",
-      "Improved data-intensive dashboard performance through virtualisation, code splitting, caching, and more efficient rendering.",
+      "Improved data-intensive dashboard performance through virtualization, code splitting, caching, and more efficient rendering.",
     ],
   },
   {
@@ -133,7 +133,7 @@ export const SKILLS: SkillGroup[] = [
 ];
 
 export const INTERESTS = [
-  "Travelling",
+  "Traveling",
   "Running",
   "Basketball",
   "Pickleball",

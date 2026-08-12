@@ -148,7 +148,7 @@ export default function HowItWorks() {
               Anything objectively decidable is decided in code. Requirement coverage is set
               arithmetic; asking a model to re-derive it would be slower, costlier, and
               occasionally wrong about a fact that is simply computable. These{" "}
-              {RUBRIC_CRITERIA.length} criteria are what genuinely needs judgement.
+              {RUBRIC_CRITERIA.length} criteria are what genuinely needs judgment.
             </p>
           </div>
           <div className={styles.tableWrap}>

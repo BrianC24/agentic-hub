@@ -74,13 +74,45 @@
   color: var(--fg-subtle);
 }
 
-@media (max-width: 640px) {
+/* Collapses without an empty row on pages that pass no controls. */
+.slot:empty {
+  display: none;
+}
+
+/*
+ * Breakpoint is 760px rather than 640: the run page puts a live toggle and a
+ * model picker in the slot, and those start crowding the nav links well before
+ * phone widths.
+ */
+@media (max-width: 760px) {
   .inner {
+    flex-wrap: wrap;
     padding: 0.625rem 1rem;
-    gap: 0.75rem;
+    gap: 0.5rem 0.75rem;
   }
 
+  .navLink {
+    padding: 0.3rem 0.5rem;
+  }
+
+  /* Controls take their own row instead of squeezing the navigation. */
+  .slot {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+}
+
+@media (max-width: 400px) {
   .wordmark {
     display: none;
+  }
+
+  .navLink {
+    font-size: 0.78125rem;
+    padding: 0.3rem 0.4rem;
   }
 }

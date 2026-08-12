@@ -50,7 +50,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 2,
     title: "Requirement extraction",
     what: "Turns prose into explicit requirements, implied requirements, ambiguities, and missing information.",
-    why: "A schema catches shape, not honesty. Well-formed JSON can cite a requirement the ticket never contained. So every explicit requirement must carry a sourceQuote, and that quote is checked against the ticket's own words — whitespace-normalised and case-insensitive, so a quote spanning a line break still passes, but a paraphrase does not. Constrained decoding would not catch this, because the output is structurally perfect.",
+    why: "A schema catches shape, not honesty. Well-formed JSON can cite a requirement the ticket never contained. So every explicit requirement must carry a sourceQuote, and that quote is checked against the ticket's own words — whitespace-normalized and case-insensitive, so a quote spanning a line break still passes, but a paraphrase does not. Constrained decoding would not catch this, because the output is structurally perfect.",
     sources: [
       "src/lib/requirements/schema.ts",
       "src/lib/requirements/prompt.ts",
@@ -78,7 +78,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 4,
     title: "Deterministic checks",
     what: "Six objective checks over the plan: coverage, test strategy, orphan steps, unmitigated risks, acknowledged ambiguities, steps present.",
-    why: "Anything objectively decidable is decided in code. Asking a model whether every requirement is covered would be slower, more expensive, and occasionally wrong about arithmetic. These run before the judge, so a plan already known to be short never costs an evaluation call. Warnings do not block — they are judgement calls surfaced to the human.",
+    why: "Anything objectively decidable is decided in code. Asking a model whether every requirement is covered would be slower, more expensive, and occasionally wrong about arithmetic. These run before the judge, so a plan already known to be short never costs an evaluation call. Warnings do not block — they are judgment calls surfaced to the human.",
     sources: ["src/lib/validation/checks.ts"],
     evidence: [
       "Free and instant: no model call, no network.",
@@ -90,7 +90,7 @@ export const STAGES: WalkthroughStage[] = [
     number: 5,
     title: "Rubric evaluation",
     what: `An LLM judge scores ${PLAN_RUBRIC.length} criteria from 1–5 against written anchors, with mandatory evidence per score. Passing threshold: ${PASSING_THRESHOLD}.`,
-    why: "Only what genuinely needs judgement reaches the model. The judge must score every criterion exactly once — without that rule it can silently omit the criterion it would score badly, and the average improves for free. That is structurally valid and semantically dishonest, and invisible unless you check for it.",
+    why: "Only what genuinely needs judgment reaches the model. The judge must score every criterion exactly once — without that rule it can silently omit the criterion it would score badly, and the average improves for free. That is structurally valid and semantically dishonest, and invisible unless you check for it.",
     sources: ["src/lib/evaluation/rubric.ts", "src/lib/evaluation/schema.ts"],
     evidence: [
       "A scoring that skips, repeats, or invents a criterion is rejected.",
