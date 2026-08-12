@@ -59,21 +59,23 @@ describe("replayed workflows", () => {
     expect(ambiguous.artifacts.requirements!.ambiguities.length).toBeGreaterThan(0);
   });
 
-  it("documents that clarificationNeeded over-flags and cannot gate on its own", async () => {
-    // Measured limitation on claude-haiku-4-5: every fixture came back true,
-    // including the well-specified one. Pinned as a test so a future prompt
-    // change that fixes it fails loudly here rather than going unnoticed.
+  it("does not depend on clarificationNeeded, which is not stable across runs", async () => {
+    // Measured twice on claude-haiku-4-5 with different results: one recording
+    // set returned true for all three tickets including the well-specified
+    // one; a later set discriminated correctly. It is a model judgement call,
+    // not a reliable signal, so nothing gates on it — this test exists to stop
+    // anyone wiring it into a gate later.
     const results = await Promise.all(
       ["clear-feature-request", "ambiguous-ticket", "missing-acceptance-criteria"].map((key) =>
         runWorkflow(createReplayProvider(key), getTicketFixture(key)!.ticket),
       ),
     );
 
-    expect(results.map((r) => r.artifacts.requirements!.clarificationNeeded)).toEqual([
-      true,
-      true,
-      true,
-    ]);
+    // Every run still reaches approval regardless of what the flag says.
+    expect(results.every((r) => r.run.stage === "awaiting_approval")).toBe(true);
+    expect(
+      results.every((r) => typeof r.artifacts.requirements!.clarificationNeeded === "boolean"),
+    ).toBe(true);
   });
 
   it("fails loudly when a recording runs out mid-workflow", async () => {

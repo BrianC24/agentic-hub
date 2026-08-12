@@ -1,5 +1,4 @@
-import { sumCostUsd } from "@/lib/llm/cost";
-import { addUsage, EMPTY_USAGE, type ModelProvider, type ModelUsage } from "@/lib/llm/types";
+import type { ModelProvider, ModelUsage } from "@/lib/llm/types";
 import type { StructuredRun } from "@/lib/llm/structured";
 import { evaluatePlan } from "@/lib/evaluation/evaluate";
 import { scoreEvaluation, type Evaluation, type EvaluationVerdict } from "@/lib/evaluation/schema";
@@ -16,6 +15,7 @@ import {
   transition,
   type Run,
 } from "./run";
+import { summarizeTotals, type RunTotals } from "./totals";
 
 /**
  * Everything one workflow execution produced.
@@ -49,12 +49,7 @@ export interface StageRunRecord {
 export interface WorkflowResult {
   run: Run;
   artifacts: RunArtifacts;
-  totals: {
-    usage: ModelUsage;
-    latencyMs: number;
-    estimatedCostUsd: number | null;
-    modelCalls: number;
-  };
+  totals: RunTotals;
 }
 
 export interface WorkflowOptions {
@@ -211,17 +206,7 @@ function formatWeakCriteria(verdict: EvaluationVerdict): string {
 }
 
 function finish(run: Run, artifacts: RunArtifacts): WorkflowResult {
-  const usage = artifacts.stageRuns.reduce((acc, r) => addUsage(acc, r.usage), EMPTY_USAGE);
-  return {
-    run,
-    artifacts,
-    totals: {
-      usage,
-      latencyMs: artifacts.stageRuns.reduce((acc, r) => acc + r.latencyMs, 0),
-      estimatedCostUsd: sumCostUsd(artifacts.stageRuns.map((r) => r.estimatedCostUsd)),
-      modelCalls: artifacts.stageRuns.reduce((acc, r) => acc + r.attempts, 0),
-    },
-  };
+  return { run, artifacts, totals: summarizeTotals(artifacts.stageRuns) };
 }
 
 export type { Evaluation, EvaluationVerdict };

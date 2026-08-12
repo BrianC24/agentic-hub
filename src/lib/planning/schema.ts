@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { SchemaViolation, StructuredParseResult } from "@/lib/llm/structured";
 import type { ExtractedRequirements } from "@/lib/requirements/schema";
+import { stripCodeFence } from "@/lib/llm/json";
 
 /**
  * Contract for an implementation plan.
@@ -100,8 +101,3 @@ export function parsePlan(
   return { success: true, data: result.data };
 }
 
-function stripCodeFence(raw: string): string {
-  const trimmed = raw.trim();
-  const fenced = /^```(?:json)?\s*\n([\s\S]*?)\n?```$/.exec(trimmed);
-  return fenced ? fenced[1] : trimmed;
-}

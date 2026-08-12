@@ -45,7 +45,9 @@ export class MockProvider implements ModelProvider {
   }
 
   async complete(request: ModelRequest): Promise<ModelResponse> {
-    this.requests.push(request);
+    // Snapshot: the repair loop mutates one messages array in place, so a
+    // stored reference would make every recorded request identical.
+    this.requests.push({ ...request, messages: request.messages.map((m) => ({ ...m })) });
     const turn = this.turns[this.callCount];
     this.callCount += 1;
 

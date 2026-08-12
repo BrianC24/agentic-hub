@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { SchemaViolation, StructuredParseResult } from "@/lib/llm/structured";
 import { PASSING_THRESHOLD, PLAN_RUBRIC } from "./rubric";
+import { stripCodeFence } from "@/lib/llm/json";
 
 /**
  * Contract for a rubric evaluation.
@@ -122,8 +123,3 @@ export function scoreEvaluation(evaluation: Evaluation): EvaluationVerdict {
   };
 }
 
-function stripCodeFence(raw: string): string {
-  const trimmed = raw.trim();
-  const fenced = /^```(?:json)?\s*\n([\s\S]*?)\n?```$/.exec(trimmed);
-  return fenced ? fenced[1] : trimmed;
-}

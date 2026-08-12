@@ -1,5 +1,4 @@
-import { sumCostUsd } from "@/lib/llm/cost";
-import { addUsage, EMPTY_USAGE, type ModelProvider } from "@/lib/llm/types";
+import { addUsage, type ModelProvider } from "@/lib/llm/types";
 import { evaluatePlan } from "@/lib/evaluation/evaluate";
 import { scoreEvaluation } from "@/lib/evaluation/schema";
 import { planImplementation } from "@/lib/planning/plan";
@@ -7,6 +6,7 @@ import type { Ticket } from "@/lib/ticket/schema";
 import { validatePlan } from "@/lib/validation/checks";
 import type { RunArtifacts, StageRunRecord, WorkflowResult } from "./orchestrator";
 import { recordApproval, recordEvent, repairBudgetExhausted, transition, type Run } from "./run";
+import { summarizeTotals } from "./totals";
 
 /**
  * Re-plans after a human rejects a plan.
@@ -137,15 +137,5 @@ export function approveRun(run: Run, note: string): Run {
 }
 
 function finish(run: Run, artifacts: RunArtifacts): WorkflowResult {
-  const usage = artifacts.stageRuns.reduce((acc, r) => addUsage(acc, r.usage), EMPTY_USAGE);
-  return {
-    run,
-    artifacts,
-    totals: {
-      usage,
-      latencyMs: artifacts.stageRuns.reduce((acc, r) => acc + r.latencyMs, 0),
-      estimatedCostUsd: sumCostUsd(artifacts.stageRuns.map((r) => r.estimatedCostUsd)),
-      modelCalls: artifacts.stageRuns.reduce((acc, r) => acc + r.attempts, 0),
-    },
-  };
+  return { run, artifacts, totals: summarizeTotals(artifacts.stageRuns) };
 }

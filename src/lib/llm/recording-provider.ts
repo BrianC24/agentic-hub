@@ -24,9 +24,13 @@ export class RecordingProvider implements ModelProvider {
   }
 
   async complete(request: ModelRequest): Promise<ModelResponse> {
+    // Snapshot the request. The repair loop mutates one messages array in
+    // place, so storing it by reference would make every exchange show the
+    // final conversation instead of what was actually sent at that point.
+    const snapshot: ModelRequest = { ...request, messages: request.messages.map((m) => ({ ...m })) };
     const startedAt = Date.now();
     const response = await this.inner.complete(request);
-    this.exchanges.push({ request, response, latencyMs: Date.now() - startedAt });
+    this.exchanges.push({ request: snapshot, response, latencyMs: Date.now() - startedAt });
     return response;
   }
 }

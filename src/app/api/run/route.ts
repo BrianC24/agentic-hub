@@ -5,6 +5,7 @@ import type { ModelProvider } from "@/lib/llm/types";
 import { createReplayProvider, hasRecording } from "@/lib/replay";
 import { parseTicket } from "@/lib/ticket/schema";
 import { runWorkflow } from "@/lib/workflow/orchestrator";
+import { newRunId, runStore } from "@/lib/workflow/store";
 
 /**
  * Starts a workflow run.
@@ -87,8 +88,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await runWorkflow(provider, parsed.ticket);
-    return NextResponse.json({ mode, model: provider.model, ...result });
+    const runId = newRunId();
+    const result = await runWorkflow(provider, parsed.ticket, { runId });
+
+    // Only a run that can still be decided on is worth holding. Storing the
+    // artifacts server-side is what keeps the repair bound enforceable — the
+    // client never gets to tell us how many rounds it has already used.
+    if (result.run.stage === "awaiting_approval") {
+      runStore.save(runId, {
+        run: result.run,
+        artifacts: result.artifacts,
+        ticket: parsed.ticket,
+      });
+    }
+
+    return NextResponse.json({ mode, model: provider.model, runId, ...result });
   } catch (error) {
     // A thrown error here is a bug in the workflow, not a model failure —
     // model failures are represented as a failed run, not an exception.

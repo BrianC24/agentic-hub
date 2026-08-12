@@ -1,0 +1,547 @@
+{
+  "fixtureKey": "missing-acceptance-criteria",
+  "model": "claude-haiku-4-5",
+  "recordedAt": "2026-08-12T03-27-16-457Z",
+  "exchanges": [
+    {
+      "request": {
+        "system": "You extract engineering requirements from a Jira-style ticket.\n\nReturn a single JSON object with exactly these fields:\n- summary: one or two sentences describing what the ticket asks for.\n- explicitRequirements: array of { id, text, sourceQuote } — things the ticket states directly. sourceQuote must be a verbatim substring of the ticket.\n- impliedRequirements: array of { id, text } — things a competent engineer would infer but the ticket does not state. Omit sourceQuote here.\n- ambiguities: array of { question, why } — genuine ambiguities that would change the implementation.\n- missingInformation: array of strings — information needed before work can start.\n- clarificationNeeded: boolean — true only when the ticket cannot responsibly proceed without a human answer.\n\nRules:\n- Do not invent requirements the ticket does not support. An empty array is a valid answer.\n- Prefer flagging an ambiguity over guessing an interpretation.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178\nType: feature\nPriority: low\nTitle: Add dark mode toggle to settings menu\n\nDescription:\nUsers have asked for a dark mode option. Add a toggle in account settings that switches the app's color theme.\n\nAcceptance criteria:\n(none provided)"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"summary\": \"Add a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.\",\n  \"explicitRequirements\": [\n    {\n      \"id\": \"ER1\",\n      \"text\": \"Add a toggle in account settings\",\n      \"sourceQuote\": \"Add a toggle in account settings\"\n    },\n    {\n      \"id\": \"ER2\",\n      \"text\": \"Toggle switches the app's color theme\",\n      \"sourceQuote\": \"switches the app's color theme\"\n    }\n  ],\n  \"impliedRequirements\": [\n    {\n      \"id\": \"IR1\",\n      \"text\": \"Persist the user's dark mode preference across sessions\"\n    },\n    {\n      \"id\": \"IR2\",\n      \"text\": \"Apply the selected theme to all screens and components in the app\"\n    },\n    {\n      \"id\": \"IR3\",\n      \"text\": \"Provide visual feedback when the toggle is activated\"\n    },\n    {\n      \"id\": \"IR4\",\n      \"text\": \"Define a complete dark color palette that meets accessibility standards\"\n    }\n  ],\n  \"ambiguities\": [\n    {\n      \"question\": \"Should dark mode be the only theme option, or should there be additional theme choices (e.g., auto/system, light, dark, custom)?\",\n      \"why\": \"The ticket says 'switches the app's color theme' but does not specify if there are only two states or more\"\n    },\n    {\n      \"question\": \"Should the app respect the system's dark mode preference by default, or default to light mode?\",\n      \"why\": \"The implementation behavior on first install is not specified\"\n    },\n    {\n      \"question\": \"Which screens and components must support dark mode?\",\n      \"why\": \"The scope of theme application is unclear—entire app, settings only, or specific modules?\"\n    },\n    {\n      \"question\": \"Are there any specific dark mode design specifications or color palette already defined?\",\n      \"why\": \"No design assets or color guidelines are referenced in the ticket\"\n    }\n  ],\n  \"missingInformation\": [\n    \"Acceptance criteria for what constitutes a complete implementation\",\n    \"Design specifications or approved dark color palette\",\n    \"Accessibility requirements (WCAG contrast ratios, etc.)\",\n    \"Whether third-party libraries or custom implementations should be used\",\n    \"Testing requirements (browsers, devices, screen readers)\"\n  ],\n  \"clarificationNeeded\": true\n}\n```",
+        "usage": {
+          "inputTokens": 310,
+          "outputTokens": 603
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 5620
+    },
+    {
+      "request": {
+        "system": "You write an implementation plan for an engineering ticket, given requirements already extracted from it.\n\nReturn a single JSON object with exactly these fields:\n- approach: two or three sentences describing the overall strategy.\n- steps: array of { id, description, addressesRequirements, files } — ordered implementation steps. id is a STRING label such as \"S1\", \"S2\" — never a bare number. addressesRequirements is an array of STRINGS listing the requirement ids this step satisfies, and every id must be one you were given. files is an array of STRINGS listing paths expected to change, and may be empty.\n- testStrategy: array of strings — how the change will be verified. At least one entry.\n- risks: array of { description, mitigation } — what could go wrong and what reduces that.\n- outOfScope: array of strings — work deliberately not being done.\n\nRules:\n- Every explicit requirement must be addressed by at least one step.\n- Only cite requirement ids that were given to you. Do not invent ids.\n- If the requirements say clarification is needed, still produce a plan, but list the open questions in risks.\n- Prefer the simplest approach that satisfies the requirements.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178: Add dark mode toggle to settings menu\n\nSummary of the request:\nAdd a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.\n\nExplicit requirements:\n- ER1: Add a toggle in account settings\n- ER2: Toggle switches the app's color theme\n\nImplied requirements:\n- IR1: Persist the user's dark mode preference across sessions\n- IR2: Apply the selected theme to all screens and components in the app\n- IR3: Provide visual feedback when the toggle is activated\n- IR4: Define a complete dark color palette that meets accessibility standards\n\nOpen ambiguities:\n- Should dark mode be the only theme option, or should there be additional theme choices (e.g., auto/system, light, dark, custom)?\n- Should the app respect the system's dark mode preference by default, or default to light mode?\n- Which screens and components must support dark mode?\n- Are there any specific dark mode design specifications or color palette already defined?\n\nClarification needed before work starts: yes"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"approach\": \"Implement a dark mode toggle in the account settings menu that persists user preference and applies a cohesive dark theme across the app. We will create a theme management system with light and dark color palettes, store the preference in local storage, and apply themes reactively to all UI components.\",\n  \"steps\": [\n    {\n      \"id\": \"S1\",\n      \"description\": \"Define complete light and dark color palettes that meet WCAG AA accessibility standards for contrast ratios. Document the palette in a shared constants file.\",\n      \"addressesRequirements\": [\n        \"IR4\"\n      ],\n      \"files\": [\n        \"src/constants/theme.ts\",\n        \"src/styles/colors.ts\"\n      ]\n    },\n    {\n      \"id\": \"S2\",\n      \"description\": \"Create a theme context and provider that manages theme state globally, exposes a toggle function, and automatically applies the selected theme to the document root.\",\n      \"addressesRequirements\": [\n        \"IR1\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/context/ThemeContext.tsx\",\n        \"src/providers/ThemeProvider.tsx\"\n      ]\n    },\n    {\n      \"id\": \"S3\",\n      \"description\": \"Implement persistence logic to save the user's theme preference to localStorage and restore it on app initialization.\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/utils/themeStorage.ts\",\n        \"src/hooks/useThemePersistence.ts\"\n      ]\n    },\n    {\n      \"id\": \"S4\",\n      \"description\": \"Add a dark mode toggle switch component to the account settings menu with clear labeling and visual feedback on state change.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/components/AccountSettings.tsx\",\n        \"src/components/ThemeToggle.tsx\"\n      ]\n    },\n    {\n      \"id\": \"S5\",\n      \"description\": \"Apply the theme system to all existing screens and components by converting hardcoded colors to use theme tokens from the context.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/screens/*.tsx\",\n        \"src/components/*.tsx\",\n        \"src/styles/*.css\"\n      ]\n    },\n    {\n      \"id\": \"S6\",\n      \"description\": \"Test theme switching, persistence across sessions, accessibility compliance, and consistent application across all screens.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"ER2\",\n        \"IR1\",\n        \"IR2\",\n        \"IR3\",\n        \"IR4\"\n      ],\n      \"files\": []\n    }\n  ],\n  \"testStrategy\": [\n    \"Manual testing: Toggle dark mode in settings and verify the entire app theme changes immediately and consistently\",\n    \"Persistence testing: Enable dark mode, close and reopen the app, confirm the preference is restored\",\n    \"Accessibility testing: Use a contrast checker tool to verify all text and UI elements meet WCAG AA standards in both light and dark modes\",\n    \"Visual regression testing: Screenshot comparison of key screens in both themes to detect unintended color changes\",\n    \"Component testing: Unit tests for ThemeContext and ThemeProvider to ensure toggle state and persistence functions work correctly\",\n    \"Cross-screen validation: Walk through all major screens and verify dark mode is applied to all text, backgrounds, borders, and interactive elements\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on default theme behavior: unclear whether to default to light mode, respect system preference, or use a different strategy\",\n      \"mitigation\": \"Seek clarification on default theme behavior before S2. Implement system-preference detection as a fallback if not specified, defaulting to light mode as a safe baseline.\"\n    },\n    {\n      \"description\": \"Incomplete coverage: some screens or components may not be updated with theme tokens, leading to inconsistent appearance\",\n      \"mitigation\": \"Create a checklist of all screens and components in S5 before refactoring. Use a linting rule or design token validation to catch hardcoded colors.\"\n    },\n    {\n      \"description\": \"Accessibility compliance gaps: dark palette may not meet WCAG AA contrast requirements for all component states\",\n      \"mitigation\": \"Validate all color pairs in S1 using an automated contrast checker. Test with accessibility tools like axe in S6.\"\n    },\n    {\n      \"description\": \"Third-party library or dependency conflicts: external UI libraries may not respect the theme context\",\n      \"mitigation\": \"Identify and test all third-party components early. Wrap or style them with CSS overrides if needed.\"\n    },\n    {\n      \"description\": \"Performance impact: applying theme changes reactively to many components could cause lag\",\n      \"mitigation\": \"Use CSS variables at the root level and context optimization to minimize re-renders. Test performance on low-end devices.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Implementing additional theme options (e.g., auto, custom, or multiple color schemes) beyond light and dark\",\n    \"System preference detection (e.g., respecting prefers-color-scheme) unless clarified as required\",\n    \"Dark mode for external integrations or third-party services not directly controlled by the app\",\n    \"Animated theme transitions or special visual effects during theme switching\",\n    \"Mobile-specific dark mode behaviors beyond the core toggle functionality\"\n  ]\n}\n```",
+        "usage": {
+          "inputTokens": 532,
+          "outputTokens": 1336
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 12388
+    },
+    {
+      "request": {
+        "system": "You evaluate an engineering implementation plan against a fixed rubric.\n\nScore every criterion exactly once, on a 1-5 integer scale, using the anchors given. For each score, cite the specific part of the plan that justifies it — quote it or name the step id. A score without concrete evidence is not acceptable.\n\nReturn a single JSON object with exactly these fields:\n- scores: array of { criterionId, score, evidence } — one entry per rubric criterion, no more, no less.\n- overallComment: two or three sentences summarising the plan's fitness.\n\nRules:\n- Be critical. A plan that merely looks organised is not automatically good.\n- Do not re-check things that are mechanically verifiable (whether every requirement id appears, whether a test strategy field is non-empty). Those are checked elsewhere. Judge quality, not presence.\n- Respond with the JSON object only. No prose, no markdown code fence.\n\nRubric:\n- approach_soundness (Approach soundness): Is the proposed approach a reasonable way to satisfy the requirements?\n  Anchors: 5 = the approach is what an experienced engineer would choose. 3 = workable but with an avoidable flaw. 1 = would not produce a working result.\n- unsupported_assumptions (Unsupported assumptions): Does the plan invent constraints, behaviour, or context the ticket and requirements never established?\n  Anchors: 5 = every claim traces to the ticket or is flagged as an assumption. 3 = one minor unflagged assumption. 1 = substantive invented requirements.\n- test_strategy_quality (Test strategy quality): Would the stated tests actually catch a regression in the behaviour being changed?\n  Anchors: 5 = tests target the specific behaviour and its failure modes. 3 = generic tests that would catch only gross breakage. 1 = tests that would pass regardless of correctness.\n- scope_discipline (Scope discipline): Does the plan stay within what was asked?\n  Anchors: 5 = does exactly what the ticket requires. 3 = minor unrequested additions. 1 = substantial unrequested rework.\n- risk_awareness (Risk awareness): Does the plan identify the risks that actually matter for this change, including security and accessibility where relevant?\n  Anchors: 5 = names the genuine risks with useful mitigations. 3 = generic risks only. 1 = misses an obvious serious risk.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178: Add dark mode toggle to settings menu\n\nUsers have asked for a dark mode option. Add a toggle in account settings that switches the app's color theme.\n\nRequirements identified:\n- ER1: Add a toggle in account settings\n- ER2: Toggle switches the app's color theme\n\nAmbiguities raised:\n- Should dark mode be the only theme option, or should there be additional theme choices (e.g., auto/system, light, dark, custom)?\n- Should the app respect the system's dark mode preference by default, or default to light mode?\n- Which screens and components must support dark mode?\n- Are there any specific dark mode design specifications or color palette already defined?\n\nPlan under evaluation:\n{\n  \"approach\": \"Implement a dark mode toggle in the account settings menu that persists user preference and applies a cohesive dark theme across the app. We will create a theme management system with light and dark color palettes, store the preference in local storage, and apply themes reactively to all UI components.\",\n  \"steps\": [\n    {\n      \"id\": \"S1\",\n      \"description\": \"Define complete light and dark color palettes that meet WCAG AA accessibility standards for contrast ratios. Document the palette in a shared constants file.\",\n      \"addressesRequirements\": [\n        \"IR4\"\n      ],\n      \"files\": [\n        \"src/constants/theme.ts\",\n        \"src/styles/colors.ts\"\n      ]\n    },\n    {\n      \"id\": \"S2\",\n      \"description\": \"Create a theme context and provider that manages theme state globally, exposes a toggle function, and automatically applies the selected theme to the document root.\",\n      \"addressesRequirements\": [\n        \"IR1\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/context/ThemeContext.tsx\",\n        \"src/providers/ThemeProvider.tsx\"\n      ]\n    },\n    {\n      \"id\": \"S3\",\n      \"description\": \"Implement persistence logic to save the user's theme preference to localStorage and restore it on app initialization.\",\n      \"addressesRequirements\": [\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/utils/themeStorage.ts\",\n        \"src/hooks/useThemePersistence.ts\"\n      ]\n    },\n    {\n      \"id\": \"S4\",\n      \"description\": \"Add a dark mode toggle switch component to the account settings menu with clear labeling and visual feedback on state change.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/components/AccountSettings.tsx\",\n        \"src/components/ThemeToggle.tsx\"\n      ]\n    },\n    {\n      \"id\": \"S5\",\n      \"description\": \"Apply the theme system to all existing screens and components by converting hardcoded colors to use theme tokens from the context.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/screens/*.tsx\",\n        \"src/components/*.tsx\",\n        \"src/styles/*.css\"\n      ]\n    },\n    {\n      \"id\": \"S6\",\n      \"description\": \"Test theme switching, persistence across sessions, accessibility compliance, and consistent application across all screens.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"ER2\",\n        \"IR1\",\n        \"IR2\",\n        \"IR3\",\n        \"IR4\"\n      ],\n      \"files\": []\n    }\n  ],\n  \"testStrategy\": [\n    \"Manual testing: Toggle dark mode in settings and verify the entire app theme changes immediately and consistently\",\n    \"Persistence testing: Enable dark mode, close and reopen the app, confirm the preference is restored\",\n    \"Accessibility testing: Use a contrast checker tool to verify all text and UI elements meet WCAG AA standards in both light and dark modes\",\n    \"Visual regression testing: Screenshot comparison of key screens in both themes to detect unintended color changes\",\n    \"Component testing: Unit tests for ThemeContext and ThemeProvider to ensure toggle state and persistence functions work correctly\",\n    \"Cross-screen validation: Walk through all major screens and verify dark mode is applied to all text, backgrounds, borders, and interactive elements\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on default theme behavior: unclear whether to default to light mode, respect system preference, or use a different strategy\",\n      \"mitigation\": \"Seek clarification on default theme behavior before S2. Implement system-preference detection as a fallback if not specified, defaulting to light mode as a safe baseline.\"\n    },\n    {\n      \"description\": \"Incomplete coverage: some screens or components may not be updated with theme tokens, leading to inconsistent appearance\",\n      \"mitigation\": \"Create a checklist of all screens and components in S5 before refactoring. Use a linting rule or design token validation to catch hardcoded colors.\"\n    },\n    {\n      \"description\": \"Accessibility compliance gaps: dark palette may not meet WCAG AA contrast requirements for all component states\",\n      \"mitigation\": \"Validate all color pairs in S1 using an automated contrast checker. Test with accessibility tools like axe in S6.\"\n    },\n    {\n      \"description\": \"Third-party library or dependency conflicts: external UI libraries may not respect the theme context\",\n      \"mitigation\": \"Identify and test all third-party components early. Wrap or style them with CSS overrides if needed.\"\n    },\n    {\n      \"description\": \"Performance impact: applying theme changes reactively to many components could cause lag\",\n      \"mitigation\": \"Use CSS variables at the root level and context optimization to minimize re-renders. Test performance on low-end devices.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"Implementing additional theme options (e.g., auto, custom, or multiple color schemes) beyond light and dark\",\n    \"System preference detection (e.g., respecting prefers-color-scheme) unless clarified as required\",\n    \"Dark mode for external integrations or third-party services not directly controlled by the app\",\n    \"Animated theme transitions or special visual effects during theme switching\",\n    \"Mobile-specific dark mode behaviors beyond the core toggle functionality\"\n  ]\n}"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"scores\": [\n    {\n      \"criterionId\": \"approach_soundness\",\n      \"score\": 4,\n      \"evidence\": \"The approach is sound: create a theme context (S2), persist preference (S3), add UI toggle (S4), and apply across components (S5). This is a standard React pattern. However, the plan does not clarify the default theme behavior—it mentions 'defaulting to light mode as a safe baseline' in risk mitigation but doesn't commit this in the approach or S2 description itself. This leaves a gap between identified ambiguity and implementation clarity.\"\n    },\n    {\n      \"criterionId\": \"unsupported_assumptions\",\n      \"score\": 2,\n      \"evidence\": \"The plan invents several requirements not in the ticket: (1) 'complete light and dark color palettes that meet WCAG AA accessibility standards' in S1—the ticket does not specify accessibility targets; (2) 'automatically applies the selected theme to the document root' in S2—mechanism not required; (3) 'persistence logic to save...to localStorage' in S3—persistence is not mentioned in ER1 or ER2; (4) 'convert hardcoded colors to use theme tokens' in S5—scope expansion beyond 'toggle switches the app's color theme'. The plan flags some ambiguities correctly but implements assumptions without marking them as such in the approach or steps.\"\n    },\n    {\n      \"criterionId\": \"test_strategy_quality\",\n      \"score\": 4,\n      \"evidence\": \"Tests are targeted and reasonably comprehensive: 'toggle dark mode in settings and verify the entire app theme changes immediately' directly tests ER2; 'close and reopen the app, confirm the preference is restored' tests persistence; contrast checker validates accessibility; visual regression catches color inconsistencies; unit tests validate context logic. However, tests do not explicitly cover edge cases like toggling rapidly, theme changes while app is backgrounded, or behavior with missing/invalid localStorage data. The strategy would catch major breakage but misses some failure modes.\"\n    },\n    {\n      \"criterionId\": \"scope_discipline\",\n      \"score\": 2,\n      \"evidence\": \"The plan substantially exceeds the ticket scope. ER1 asks to 'add a toggle in account settings'; ER2 asks the toggle to 'switch the app's color theme.' The plan adds: color palette design and WCAG AA validation (S1), a global theme context system (S2), localStorage persistence across sessions (S3), component-wide refactoring to use theme tokens (S5), and accessibility testing. The 'outOfScope' section acknowledges system preference detection and multiple themes were not requested, but the plan still adds persistence and comprehensive theming infrastructure not asked for. S5 alone ('convert hardcoded colors to use theme tokens') is substantial rework.\"\n    },\n    {\n      \"criterionId\": \"risk_awareness\",\n      \"score\": 4,\n      \"evidence\": \"The plan identifies genuine risks: default theme ambiguity (risk mitigation suggests clarification before S2), incomplete coverage (checklist and linting mitigation), accessibility compliance (contrast checker in S1), third-party library conflicts (wrap/override mitigation), and performance (CSS variables and context optimization). These are realistic and well-reasoned. However, one serious risk is underaddressed: what happens if localStorage is disabled or corrupted? The plan does not mention fallback behavior or error handling in S3. Security risks (e.g., localStorage injection if user data is stored there) are not mentioned.\"\n    }\n  ],\n  \"overallComment\": \"The plan is well-structured and uses sound engineering patterns, but it invents substantial requirements beyond the ticket scope—particularly persistence, global theming infrastructure, and component-wide refactoring—without flagging these as assumptions or requesting scope clarification. The test strategy is solid for what it covers, but the implementation commits to behavior (e.g., localStorage persistence, WCAG AA compliance) that the ticket did not request and the ambiguities section explicitly flagged as uncertain.\"\n}\n```",
+        "usage": {
+          "inputTokens": 2050,
+          "outputTokens": 931
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 10489
+    },
+    {
+      "request": {
+        "system": "You write an implementation plan for an engineering ticket, given requirements already extracted from it.\n\nReturn a single JSON object with exactly these fields:\n- approach: two or three sentences describing the overall strategy.\n- steps: array of { id, description, addressesRequirements, files } — ordered implementation steps. id is a STRING label such as \"S1\", \"S2\" — never a bare number. addressesRequirements is an array of STRINGS listing the requirement ids this step satisfies, and every id must be one you were given. files is an array of STRINGS listing paths expected to change, and may be empty.\n- testStrategy: array of strings — how the change will be verified. At least one entry.\n- risks: array of { description, mitigation } — what could go wrong and what reduces that.\n- outOfScope: array of strings — work deliberately not being done.\n\nRules:\n- Every explicit requirement must be addressed by at least one step.\n- Only cite requirement ids that were given to you. Do not invent ids.\n- If the requirements say clarification is needed, still produce a plan, but list the open questions in risks.\n- Prefer the simplest approach that satisfies the requirements.\n- Respond with the JSON object only. No prose, no markdown code fence.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178: Add dark mode toggle to settings menu\n\nSummary of the request:\nAdd a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.\n\nExplicit requirements:\n- ER1: Add a toggle in account settings\n- ER2: Toggle switches the app's color theme\n\nImplied requirements:\n- IR1: Persist the user's dark mode preference across sessions\n- IR2: Apply the selected theme to all screens and components in the app\n- IR3: Provide visual feedback when the toggle is activated\n- IR4: Define a complete dark color palette that meets accessibility standards\n\nOpen ambiguities:\n- Should dark mode be the only theme option, or should there be additional theme choices (e.g., auto/system, light, dark, custom)?\n- Should the app respect the system's dark mode preference by default, or default to light mode?\n- Which screens and components must support dark mode?\n- Are there any specific dark mode design specifications or color palette already defined?\n\nClarification needed before work starts: yes\n\nA previous plan was rejected for these reasons. Address them:\nRubric average was 3.20.\n- unsupported_assumptions scored 2: The plan invents several requirements not in the ticket: (1) 'complete light and dark color palettes that meet WCAG AA accessibility standards' in S1—the ticket does not specify accessibility targets; (2) 'automatically applies the selected theme to the document root' in S2—mechanism not required; (3) 'persistence logic to save...to localStorage' in S3—persistence is not mentioned in ER1 or ER2; (4) 'convert hardcoded colors to use theme tokens' in S5—scope expansion beyond 'toggle switches the app's color theme'. The plan flags some ambiguities correctly but implements assumptions without marking them as such in the approach or steps.\n- scope_discipline scored 2: The plan substantially exceeds the ticket scope. ER1 asks to 'add a toggle in account settings'; ER2 asks the toggle to 'switch the app's color theme.' The plan adds: color palette design and WCAG AA validation (S1), a global theme context system (S2), localStorage persistence across sessions (S3), component-wide refactoring to use theme tokens (S5), and accessibility testing. The 'outOfScope' section acknowledges system preference detection and multiple themes were not requested, but the plan still adds persistence and comprehensive theming infrastructure not asked for. S5 alone ('convert hardcoded colors to use theme tokens') is substantial rework."
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"approach\": \"Implement a dark mode toggle in the account settings menu that switches the app's theme by applying a CSS class or theme variable to the root element. Store the user's preference in localStorage to persist across sessions, and apply the selected theme on app load. This satisfies the explicit requirements (toggle in settings, theme switching) and the implied persistence and application requirements without redesigning the entire component system.\",\n  \"steps\": [\n    {\n      \"id\": \"S1\",\n      \"description\": \"Create a ToggleDarkMode component with on/off state that will be placed in the account settings menu. The component emits an event when toggled.\",\n      \"addressesRequirements\": [\"ER1\", \"IR3\"],\n      \"files\": [\"src/components/ToggleDarkMode.jsx\", \"src/components/ToggleDarkMode.css\"]\n    },\n    {\n      \"id\": \"S2\",\n      \"description\": \"Add a theme utility module that applies a CSS class (e.g., 'dark-mode') to the document root element when called, and removes it when dark mode is disabled. This is the mechanism by which the toggle switches the app's color theme.\",\n      \"addressesRequirements\": [\"ER2\", \"IR2\"],\n      \"files\": [\"src/utils/themeManager.js\"]\n    },\n    {\n      \"id\": \"S3\",\n      \"description\": \"Wire the ToggleDarkMode component to call the theme utility when toggled. Store the preference in localStorage under a key like 'darkModeEnabled'.\",\n      \"addressesRequirements\": [\"ER1\", \"ER2\", \"IR1\"],\n      \"files\": [\"src/components/SettingsMenu.jsx\"]\n    },\n    {\n      \"id\": \"S4\",\n      \"description\": \"On app initialization (e.g., in App.jsx or a root layout component), read the localStorage preference and apply the theme before the first render.\",\n      \"addressesRequirements\": [\"IR1\", \"IR2\"],\n      \"files\": [\"src/App.jsx\"]\n    },\n    {\n      \"id\": \"S5\",\n      \"description\": \"Define dark mode CSS rules (background colors, text colors, etc.) in a global stylesheet using the 'dark-mode' class selector. Apply them to existing components without refactoring component structure.\",\n      \"addressesRequirements\": [\"IR2\", \"IR4\"],\n      \"files\": [\"src/styles/darkMode.css\", \"src/styles/global.css\"]\n    }\n  ],\n  \"testStrategy\": [\n    \"Verify the toggle appears in account settings and has correct visual feedback when clicked.\",\n    \"Verify toggling switches the 'dark-mode' class on the document root and the app visually changes theme.\",\n    \"Verify the preference persists: toggle dark mode on, reload the page, confirm dark mode is still on.\",\n    \"Verify toggling off removes the dark-mode class and reverts the app to light theme.\",\n    \"Spot-check key screens (dashboard, user profile, settings) to ensure dark mode CSS rules apply across components.\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on which screens/components must support dark mode. Plan applies dark mode CSS globally; some components may not be visually optimized.\",\n      \"mitigation\": \"Focus dark mode styling on the most-used screens first (dashboard, settings, profile). Add a follow-up ticket for comprehensive component audit if needed.\"\n    },\n    {\n      \"description\": \"No specification of dark color palette or accessibility standards (WCAG). Chosen colors may not meet accessibility requirements or match design intent.\",\n      \"mitigation\": \"Use a conservative palette (e.g., light text on dark background, sufficient contrast). Request design sign-off or accessibility review in PR before merge.\"\n    },\n    {\n      \"description\": \"Ambiguity on default behavior: should the app default to the system's dark mode preference, or always default to light mode?\",\n      \"mitigation\": \"Default to light mode on first app use (localStorage key absent). If system preference is required later, add as a separate ticket.\"\n    },\n    {\n      \"description\": \"localStorage may not be available in all environments (e.g., private browsing, restricted contexts). Preference loss per session.\",\n      \"mitigation\": \"Gracefully degrade: if localStorage is unavailable, the app uses the default (light mode). User can toggle during the session.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"System dark mode detection or respect for OS-level preferences.\",\n    \"Additional theme options (e.g., auto, custom, or multiple named themes).\",\n    \"Comprehensive component refactoring or design system overhaul.\",\n    \"WCAG accessibility certification or formal color contrast audit.\",\n    \"Animations or transitions for theme switching.\",\n    \"Dark mode preference sync across multiple devices or user accounts.\"\n  ]\n}\n```",
+        "usage": {
+          "inputTokens": 876,
+          "outputTokens": 1148
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 11137
+    },
+    {
+      "request": {
+        "system": "You evaluate an engineering implementation plan against a fixed rubric.\n\nScore every criterion exactly once, on a 1-5 integer scale, using the anchors given. For each score, cite the specific part of the plan that justifies it — quote it or name the step id. A score without concrete evidence is not acceptable.\n\nReturn a single JSON object with exactly these fields:\n- scores: array of { criterionId, score, evidence } — one entry per rubric criterion, no more, no less.\n- overallComment: two or three sentences summarising the plan's fitness.\n\nRules:\n- Be critical. A plan that merely looks organised is not automatically good.\n- Do not re-check things that are mechanically verifiable (whether every requirement id appears, whether a test strategy field is non-empty). Those are checked elsewhere. Judge quality, not presence.\n- Respond with the JSON object only. No prose, no markdown code fence.\n\nRubric:\n- approach_soundness (Approach soundness): Is the proposed approach a reasonable way to satisfy the requirements?\n  Anchors: 5 = the approach is what an experienced engineer would choose. 3 = workable but with an avoidable flaw. 1 = would not produce a working result.\n- unsupported_assumptions (Unsupported assumptions): Does the plan invent constraints, behaviour, or context the ticket and requirements never established?\n  Anchors: 5 = every claim traces to the ticket or is flagged as an assumption. 3 = one minor unflagged assumption. 1 = substantive invented requirements.\n- test_strategy_quality (Test strategy quality): Would the stated tests actually catch a regression in the behaviour being changed?\n  Anchors: 5 = tests target the specific behaviour and its failure modes. 3 = generic tests that would catch only gross breakage. 1 = tests that would pass regardless of correctness.\n- scope_discipline (Scope discipline): Does the plan stay within what was asked?\n  Anchors: 5 = does exactly what the ticket requires. 3 = minor unrequested additions. 1 = substantial unrequested rework.\n- risk_awareness (Risk awareness): Does the plan identify the risks that actually matter for this change, including security and accessibility where relevant?\n  Anchors: 5 = names the genuine risks with useful mitigations. 3 = generic risks only. 1 = misses an obvious serious risk.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ticket NWB-178: Add dark mode toggle to settings menu\n\nUsers have asked for a dark mode option. Add a toggle in account settings that switches the app's color theme.\n\nRequirements identified:\n- ER1: Add a toggle in account settings\n- ER2: Toggle switches the app's color theme\n\nAmbiguities raised:\n- Should dark mode be the only theme option, or should there be additional theme choices (e.g., auto/system, light, dark, custom)?\n- Should the app respect the system's dark mode preference by default, or default to light mode?\n- Which screens and components must support dark mode?\n- Are there any specific dark mode design specifications or color palette already defined?\n\nPlan under evaluation:\n{\n  \"approach\": \"Implement a dark mode toggle in the account settings menu that switches the app's theme by applying a CSS class or theme variable to the root element. Store the user's preference in localStorage to persist across sessions, and apply the selected theme on app load. This satisfies the explicit requirements (toggle in settings, theme switching) and the implied persistence and application requirements without redesigning the entire component system.\",\n  \"steps\": [\n    {\n      \"id\": \"S1\",\n      \"description\": \"Create a ToggleDarkMode component with on/off state that will be placed in the account settings menu. The component emits an event when toggled.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"IR3\"\n      ],\n      \"files\": [\n        \"src/components/ToggleDarkMode.jsx\",\n        \"src/components/ToggleDarkMode.css\"\n      ]\n    },\n    {\n      \"id\": \"S2\",\n      \"description\": \"Add a theme utility module that applies a CSS class (e.g., 'dark-mode') to the document root element when called, and removes it when dark mode is disabled. This is the mechanism by which the toggle switches the app's color theme.\",\n      \"addressesRequirements\": [\n        \"ER2\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/utils/themeManager.js\"\n      ]\n    },\n    {\n      \"id\": \"S3\",\n      \"description\": \"Wire the ToggleDarkMode component to call the theme utility when toggled. Store the preference in localStorage under a key like 'darkModeEnabled'.\",\n      \"addressesRequirements\": [\n        \"ER1\",\n        \"ER2\",\n        \"IR1\"\n      ],\n      \"files\": [\n        \"src/components/SettingsMenu.jsx\"\n      ]\n    },\n    {\n      \"id\": \"S4\",\n      \"description\": \"On app initialization (e.g., in App.jsx or a root layout component), read the localStorage preference and apply the theme before the first render.\",\n      \"addressesRequirements\": [\n        \"IR1\",\n        \"IR2\"\n      ],\n      \"files\": [\n        \"src/App.jsx\"\n      ]\n    },\n    {\n      \"id\": \"S5\",\n      \"description\": \"Define dark mode CSS rules (background colors, text colors, etc.) in a global stylesheet using the 'dark-mode' class selector. Apply them to existing components without refactoring component structure.\",\n      \"addressesRequirements\": [\n        \"IR2\",\n        \"IR4\"\n      ],\n      \"files\": [\n        \"src/styles/darkMode.css\",\n        \"src/styles/global.css\"\n      ]\n    }\n  ],\n  \"testStrategy\": [\n    \"Verify the toggle appears in account settings and has correct visual feedback when clicked.\",\n    \"Verify toggling switches the 'dark-mode' class on the document root and the app visually changes theme.\",\n    \"Verify the preference persists: toggle dark mode on, reload the page, confirm dark mode is still on.\",\n    \"Verify toggling off removes the dark-mode class and reverts the app to light theme.\",\n    \"Spot-check key screens (dashboard, user profile, settings) to ensure dark mode CSS rules apply across components.\"\n  ],\n  \"risks\": [\n    {\n      \"description\": \"Ambiguity on which screens/components must support dark mode. Plan applies dark mode CSS globally; some components may not be visually optimized.\",\n      \"mitigation\": \"Focus dark mode styling on the most-used screens first (dashboard, settings, profile). Add a follow-up ticket for comprehensive component audit if needed.\"\n    },\n    {\n      \"description\": \"No specification of dark color palette or accessibility standards (WCAG). Chosen colors may not meet accessibility requirements or match design intent.\",\n      \"mitigation\": \"Use a conservative palette (e.g., light text on dark background, sufficient contrast). Request design sign-off or accessibility review in PR before merge.\"\n    },\n    {\n      \"description\": \"Ambiguity on default behavior: should the app default to the system's dark mode preference, or always default to light mode?\",\n      \"mitigation\": \"Default to light mode on first app use (localStorage key absent). If system preference is required later, add as a separate ticket.\"\n    },\n    {\n      \"description\": \"localStorage may not be available in all environments (e.g., private browsing, restricted contexts). Preference loss per session.\",\n      \"mitigation\": \"Gracefully degrade: if localStorage is unavailable, the app uses the default (light mode). User can toggle during the session.\"\n    }\n  ],\n  \"outOfScope\": [\n    \"System dark mode detection or respect for OS-level preferences.\",\n    \"Additional theme options (e.g., auto, custom, or multiple named themes).\",\n    \"Comprehensive component refactoring or design system overhaul.\",\n    \"WCAG accessibility certification or formal color contrast audit.\",\n    \"Animations or transitions for theme switching.\",\n    \"Dark mode preference sync across multiple devices or user accounts.\"\n  ]\n}"
+          }
+        ],
+        "maxTokens": 16000
+      },
+      "response": {
+        "text": "```json\n{\n  \"scores\": [\n    {\n      \"criterionId\": \"approach_soundness\",\n      \"score\": 4,\n      \"evidence\": \"The approach (CSS class toggling via a utility module, localStorage persistence, application on init) is architecturally sound and follows established patterns. S1–S5 form a coherent implementation path that directly satisfies ER1 and ER2. The plan avoids unnecessary refactoring. One minor weakness: the plan does not address how CSS rules will be comprehensive enough to cover all interactive states (hover, focus, disabled) across components—it assumes 'global stylesheet' coverage without verifying component compatibility.\"\n    },\n    {\n      \"criterionId\": \"unsupported_assumptions\",\n      \"score\": 4,\n      \"evidence\": \"The plan flags most ambiguities explicitly in the 'risks' and 'outOfScope' sections. It makes reasonable choices (default to light mode, localStorage fallback) and explains them. However, S5 states 'Apply them to existing components without refactoring component structure' but does not verify that all existing components are CSS-compatible with a root-level class toggle—this is an implicit assumption about the codebase's current architecture that is not validated.\"\n    },\n    {\n      \"criterionId\": \"test_strategy_quality\",\n      \"score\": 3,\n      \"evidence\": \"Tests cover the happy path: toggle appears, class switches, persistence works, visual reversion. However, test coverage is incomplete for failure modes: (1) no test for localStorage unavailability fallback behavior (despite naming it a risk), (2) no test for edge cases like toggling rapidly or during initialization, (3) 'spot-check key screens' is informal and does not specify which components or states (focus, disabled buttons, form inputs) must be visually correct in dark mode. Tests would catch gross breakage but not subtle styling regressions.\"\n    },\n    {\n      \"criterionId\": \"scope_discipline\",\n      \"score\": 5,\n      \"evidence\": \"The plan implements exactly what ER1 and ER2 require: a toggle in settings that switches the theme. It explicitly marks system detection, additional themes, animations, and device sync as out of scope. No unrequested rework or gold-plating.\"\n    },\n    {\n      \"criterionId\": \"risk_awareness\",\n      \"score\": 4,\n      \"evidence\": \"The plan identifies four concrete risks: component coverage ambiguity (risk 1), color palette and WCAG compliance (risk 2), default behavior ambiguity (risk 3), and localStorage unavailability (risk 4). Mitigations are practical (phased rollout, PR review, graceful fallback). One significant blind spot: the plan does not mention the risk of visual regression in light mode if dark mode CSS rules unintentionally override or break light mode styling (e.g., specificity issues, unset colors, or cascade conflicts). Also missing: no mention of testing on low-contrast screens, colorblind users, or high-contrast system settings that may conflict with the chosen palette.\"\n    }\n  ],\n  \"overallComment\": \"This is a well-structured, pragmatic plan that stays tightly scoped and implements the core requirement correctly. It demonstrates good risk awareness for logistics (localStorage, defaults) and openly flags design ambiguities. The main weaknesses are incomplete test coverage for edge cases and fallback scenarios, and an unvalidated assumption that all components will work with a CSS class toggle without style conflicts. The plan would benefit from explicit verification that existing component styles won't clash with dark mode rules and from more rigorous test specs for persistence and degradation.\"\n}\n```",
+        "usage": {
+          "inputTokens": 1938,
+          "outputTokens": 835
+        },
+        "model": "claude-haiku-4-5-20251001",
+        "stopReason": "end_turn"
+      },
+      "latencyMs": 9825
+    }
+  ],
+  "run": {
+    "id": "run_mspj28j4",
+    "ticket": {
+      "id": "NWB-178",
+      "title": "Add dark mode toggle to settings menu",
+      "description": "Users have asked for a dark mode option. Add a toggle in account settings that switches the app's color theme.",
+      "type": "feature",
+      "priority": "low",
+      "acceptanceCriteria": [],
+      "labels": [
+        "settings",
+        "theming"
+      ],
+      "reporter": "design-lead@example.com"
+    },
+    "stage": "awaiting_approval",
+    "createdAt": 1786505186992,
+    "updatedAt": 1786505236457,
+    "events": [
+      {
+        "at": 1786505186992,
+        "stage": "intake",
+        "kind": "stage_entered",
+        "message": "Run created from ticket"
+      },
+      {
+        "at": 1786505186992,
+        "stage": "requirements",
+        "kind": "stage_entered",
+        "message": "Extracting requirements"
+      },
+      {
+        "at": 1786505192615,
+        "stage": "requirements",
+        "kind": "stage_succeeded",
+        "message": "Extracted 2 explicit requirement(s), 4 ambiguity(ies)"
+      },
+      {
+        "at": 1786505192615,
+        "stage": "planning",
+        "kind": "stage_entered",
+        "message": "Planning implementation"
+      },
+      {
+        "at": 1786505205004,
+        "stage": "validation",
+        "kind": "stage_entered",
+        "message": "Running deterministic checks"
+      },
+      {
+        "at": 1786505205004,
+        "stage": "validation",
+        "kind": "stage_succeeded",
+        "message": "6 check(s): 0 failed, 0 warned"
+      },
+      {
+        "at": 1786505205004,
+        "stage": "evaluation",
+        "kind": "stage_entered",
+        "message": "Evaluating plan against rubric"
+      },
+      {
+        "at": 1786505215494,
+        "stage": "evaluation",
+        "kind": "stage_failed",
+        "message": "Rubric average 3.20 (below threshold)"
+      },
+      {
+        "at": 1786505215494,
+        "stage": "planning",
+        "kind": "stage_entered",
+        "message": "Replanning (round 1)"
+      },
+      {
+        "at": 1786505226631,
+        "stage": "validation",
+        "kind": "stage_entered",
+        "message": "Running deterministic checks"
+      },
+      {
+        "at": 1786505226632,
+        "stage": "validation",
+        "kind": "stage_succeeded",
+        "message": "6 check(s): 0 failed, 0 warned"
+      },
+      {
+        "at": 1786505226632,
+        "stage": "evaluation",
+        "kind": "stage_entered",
+        "message": "Evaluating plan against rubric"
+      },
+      {
+        "at": 1786505236457,
+        "stage": "evaluation",
+        "kind": "stage_succeeded",
+        "message": "Rubric average 4.00 (pass)"
+      },
+      {
+        "at": 1786505236457,
+        "stage": "awaiting_approval",
+        "kind": "stage_entered",
+        "message": "Plan ready for human approval"
+      }
+    ],
+    "repairRounds": 1,
+    "approval": null,
+    "failureReason": null
+  },
+  "artifacts": {
+    "requirements": {
+      "summary": "Add a dark mode toggle to the account settings menu that allows users to switch the app's color theme between light and dark modes.",
+      "explicitRequirements": [
+        {
+          "id": "ER1",
+          "text": "Add a toggle in account settings",
+          "sourceQuote": "Add a toggle in account settings"
+        },
+        {
+          "id": "ER2",
+          "text": "Toggle switches the app's color theme",
+          "sourceQuote": "switches the app's color theme"
+        }
+      ],
+      "impliedRequirements": [
+        {
+          "id": "IR1",
+          "text": "Persist the user's dark mode preference across sessions"
+        },
+        {
+          "id": "IR2",
+          "text": "Apply the selected theme to all screens and components in the app"
+        },
+        {
+          "id": "IR3",
+          "text": "Provide visual feedback when the toggle is activated"
+        },
+        {
+          "id": "IR4",
+          "text": "Define a complete dark color palette that meets accessibility standards"
+        }
+      ],
+      "ambiguities": [
+        {
+          "question": "Should dark mode be the only theme option, or should there be additional theme choices (e.g., auto/system, light, dark, custom)?",
+          "why": "The ticket says 'switches the app's color theme' but does not specify if there are only two states or more"
+        },
+        {
+          "question": "Should the app respect the system's dark mode preference by default, or default to light mode?",
+          "why": "The implementation behavior on first install is not specified"
+        },
+        {
+          "question": "Which screens and components must support dark mode?",
+          "why": "The scope of theme application is unclear—entire app, settings only, or specific modules?"
+        },
+        {
+          "question": "Are there any specific dark mode design specifications or color palette already defined?",
+          "why": "No design assets or color guidelines are referenced in the ticket"
+        }
+      ],
+      "missingInformation": [
+        "Acceptance criteria for what constitutes a complete implementation",
+        "Design specifications or approved dark color palette",
+        "Accessibility requirements (WCAG contrast ratios, etc.)",
+        "Whether third-party libraries or custom implementations should be used",
+        "Testing requirements (browsers, devices, screen readers)"
+      ],
+      "clarificationNeeded": true
+    },
+    "plan": {
+      "approach": "Implement a dark mode toggle in the account settings menu that switches the app's theme by applying a CSS class or theme variable to the root element. Store the user's preference in localStorage to persist across sessions, and apply the selected theme on app load. This satisfies the explicit requirements (toggle in settings, theme switching) and the implied persistence and application requirements without redesigning the entire component system.",
+      "steps": [
+        {
+          "id": "S1",
+          "description": "Create a ToggleDarkMode component with on/off state that will be placed in the account settings menu. The component emits an event when toggled.",
+          "addressesRequirements": [
+            "ER1",
+            "IR3"
+          ],
+          "files": [
+            "src/components/ToggleDarkMode.jsx",
+            "src/components/ToggleDarkMode.css"
+          ]
+        },
+        {
+          "id": "S2",
+          "description": "Add a theme utility module that applies a CSS class (e.g., 'dark-mode') to the document root element when called, and removes it when dark mode is disabled. This is the mechanism by which the toggle switches the app's color theme.",
+          "addressesRequirements": [
+            "ER2",
+            "IR2"
+          ],
+          "files": [
+            "src/utils/themeManager.js"
+          ]
+        },
+        {
+          "id": "S3",
+          "description": "Wire the ToggleDarkMode component to call the theme utility when toggled. Store the preference in localStorage under a key like 'darkModeEnabled'.",
+          "addressesRequirements": [
+            "ER1",
+            "ER2",
+            "IR1"
+          ],
+          "files": [
+            "src/components/SettingsMenu.jsx"
+          ]
+        },
+        {
+          "id": "S4",
+          "description": "On app initialization (e.g., in App.jsx or a root layout component), read the localStorage preference and apply the theme before the first render.",
+          "addressesRequirements": [
+            "IR1",
+            "IR2"
+          ],
+          "files": [
+            "src/App.jsx"
+          ]
+        },
+        {
+          "id": "S5",
+          "description": "Define dark mode CSS rules (background colors, text colors, etc.) in a global stylesheet using the 'dark-mode' class selector. Apply them to existing components without refactoring component structure.",
+          "addressesRequirements": [
+            "IR2",
+            "IR4"
+          ],
+          "files": [
+            "src/styles/darkMode.css",
+            "src/styles/global.css"
+          ]
+        }
+      ],
+      "testStrategy": [
+        "Verify the toggle appears in account settings and has correct visual feedback when clicked.",
+        "Verify toggling switches the 'dark-mode' class on the document root and the app visually changes theme.",
+        "Verify the preference persists: toggle dark mode on, reload the page, confirm dark mode is still on.",
+        "Verify toggling off removes the dark-mode class and reverts the app to light theme.",
+        "Spot-check key screens (dashboard, user profile, settings) to ensure dark mode CSS rules apply across components."
+      ],
+      "risks": [
+        {
+          "description": "Ambiguity on which screens/components must support dark mode. Plan applies dark mode CSS globally; some components may not be visually optimized.",
+          "mitigation": "Focus dark mode styling on the most-used screens first (dashboard, settings, profile). Add a follow-up ticket for comprehensive component audit if needed."
+        },
+        {
+          "description": "No specification of dark color palette or accessibility standards (WCAG). Chosen colors may not meet accessibility requirements or match design intent.",
+          "mitigation": "Use a conservative palette (e.g., light text on dark background, sufficient contrast). Request design sign-off or accessibility review in PR before merge."
+        },
+        {
+          "description": "Ambiguity on default behavior: should the app default to the system's dark mode preference, or always default to light mode?",
+          "mitigation": "Default to light mode on first app use (localStorage key absent). If system preference is required later, add as a separate ticket."
+        },
+        {
+          "description": "localStorage may not be available in all environments (e.g., private browsing, restricted contexts). Preference loss per session.",
+          "mitigation": "Gracefully degrade: if localStorage is unavailable, the app uses the default (light mode). User can toggle during the session."
+        }
+      ],
+      "outOfScope": [
+        "System dark mode detection or respect for OS-level preferences.",
+        "Additional theme options (e.g., auto, custom, or multiple named themes).",
+        "Comprehensive component refactoring or design system overhaul.",
+        "WCAG accessibility certification or formal color contrast audit.",
+        "Animations or transitions for theme switching.",
+        "Dark mode preference sync across multiple devices or user accounts."
+      ]
+    },
+    "validation": {
+      "results": [
+        {
+          "id": "steps-present",
+          "label": "Plan contains at least one step",
+          "status": "pass",
+          "detail": "5 step(s)."
+        },
+        {
+          "id": "requirement-coverage",
+          "label": "Every explicit requirement is addressed",
+          "status": "pass",
+          "detail": "All 2 explicit requirement(s) claimed by at least one step."
+        },
+        {
+          "id": "test-strategy",
+          "label": "Plan states how the change will be verified",
+          "status": "pass",
+          "detail": "5 test-strategy item(s)."
+        },
+        {
+          "id": "orphan-steps",
+          "label": "Steps trace back to a requirement",
+          "status": "pass",
+          "detail": "Every step cites at least one requirement."
+        },
+        {
+          "id": "ambiguities-acknowledged",
+          "label": "Open ambiguities are carried into the plan",
+          "status": "pass",
+          "detail": "4 ambiguity(ies) raised; plan lists 4 risk(s)."
+        },
+        {
+          "id": "risks-mitigated",
+          "label": "Each risk has a mitigation",
+          "status": "pass",
+          "detail": "4 risk(s), all mitigated."
+        }
+      ],
+      "passed": true,
+      "failedCount": 0,
+      "warnedCount": 0
+    },
+    "evaluation": {
+      "evaluation": {
+        "scores": [
+          {
+            "criterionId": "approach_soundness",
+            "score": 4,
+            "evidence": "The approach (CSS class toggling via a utility module, localStorage persistence, application on init) is architecturally sound and follows established patterns. S1–S5 form a coherent implementation path that directly satisfies ER1 and ER2. The plan avoids unnecessary refactoring. One minor weakness: the plan does not address how CSS rules will be comprehensive enough to cover all interactive states (hover, focus, disabled) across components—it assumes 'global stylesheet' coverage without verifying component compatibility."
+          },
+          {
+            "criterionId": "unsupported_assumptions",
+            "score": 4,
+            "evidence": "The plan flags most ambiguities explicitly in the 'risks' and 'outOfScope' sections. It makes reasonable choices (default to light mode, localStorage fallback) and explains them. However, S5 states 'Apply them to existing components without refactoring component structure' but does not verify that all existing components are CSS-compatible with a root-level class toggle—this is an implicit assumption about the codebase's current architecture that is not validated."
+          },
+          {
+            "criterionId": "test_strategy_quality",
+            "score": 3,
+            "evidence": "Tests cover the happy path: toggle appears, class switches, persistence works, visual reversion. However, test coverage is incomplete for failure modes: (1) no test for localStorage unavailability fallback behavior (despite naming it a risk), (2) no test for edge cases like toggling rapidly or during initialization, (3) 'spot-check key screens' is informal and does not specify which components or states (focus, disabled buttons, form inputs) must be visually correct in dark mode. Tests would catch gross breakage but not subtle styling regressions."
+          },
+          {
+            "criterionId": "scope_discipline",
+            "score": 5,
+            "evidence": "The plan implements exactly what ER1 and ER2 require: a toggle in settings that switches the theme. It explicitly marks system detection, additional themes, animations, and device sync as out of scope. No unrequested rework or gold-plating."
+          },
+          {
+            "criterionId": "risk_awareness",
+            "score": 4,
+            "evidence": "The plan identifies four concrete risks: component coverage ambiguity (risk 1), color palette and WCAG compliance (risk 2), default behavior ambiguity (risk 3), and localStorage unavailability (risk 4). Mitigations are practical (phased rollout, PR review, graceful fallback). One significant blind spot: the plan does not mention the risk of visual regression in light mode if dark mode CSS rules unintentionally override or break light mode styling (e.g., specificity issues, unset colors, or cascade conflicts). Also missing: no mention of testing on low-contrast screens, colorblind users, or high-contrast system settings that may conflict with the chosen palette."
+          }
+        ],
+        "overallComment": "This is a well-structured, pragmatic plan that stays tightly scoped and implements the core requirement correctly. It demonstrates good risk awareness for logistics (localStorage, defaults) and openly flags design ambiguities. The main weaknesses are incomplete test coverage for edge cases and fallback scenarios, and an unvalidated assumption that all components will work with a CSS class toggle without style conflicts. The plan would benefit from explicit verification that existing component styles won't clash with dark mode rules and from more rigorous test specs for persistence and degradation."
+      },
+      "averageScore": 4,
+      "passed": true,
+      "weakest": [
+        {
+          "criterionId": "test_strategy_quality",
+          "score": 3,
+          "evidence": "Tests cover the happy path: toggle appears, class switches, persistence works, visual reversion. However, test coverage is incomplete for failure modes: (1) no test for localStorage unavailability fallback behavior (despite naming it a risk), (2) no test for edge cases like toggling rapidly or during initialization, (3) 'spot-check key screens' is informal and does not specify which components or states (focus, disabled buttons, form inputs) must be visually correct in dark mode. Tests would catch gross breakage but not subtle styling regressions."
+        }
+      ]
+    },
+    "stageRuns": [
+      {
+        "stage": "requirements",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 310,
+          "outputTokens": 603
+        },
+        "latencyMs": 5620,
+        "estimatedCostUsd": 0.0033250000000000003,
+        "failureReason": null,
+        "violations": []
+      },
+      {
+        "stage": "planning",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 532,
+          "outputTokens": 1336
+        },
+        "latencyMs": 12388,
+        "estimatedCostUsd": 0.0072120000000000005,
+        "failureReason": null,
+        "violations": []
+      },
+      {
+        "stage": "evaluation",
+        "round": 0,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 2050,
+          "outputTokens": 931
+        },
+        "latencyMs": 10489,
+        "estimatedCostUsd": 0.006704999999999999,
+        "failureReason": null,
+        "violations": []
+      },
+      {
+        "stage": "planning",
+        "round": 1,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 876,
+          "outputTokens": 1148
+        },
+        "latencyMs": 11137,
+        "estimatedCostUsd": 0.0066159999999999995,
+        "failureReason": null,
+        "violations": []
+      },
+      {
+        "stage": "evaluation",
+        "round": 1,
+        "status": "success",
+        "attempts": 1,
+        "usage": {
+          "inputTokens": 1938,
+          "outputTokens": 835
+        },
+        "latencyMs": 9825,
+        "estimatedCostUsd": 0.006113,
+        "failureReason": null,
+        "violations": []
+      }
+    ]
+  },
+  "totals": {
+    "usage": {
+      "inputTokens": 5706,
+      "outputTokens": 4853
+    },
+    "latencyMs": 49459,
+    "estimatedCostUsd": 0.029971,
+    "modelCalls": 5
+  }
+}

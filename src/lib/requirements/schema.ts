@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { SchemaViolation, StructuredParseResult } from "@/lib/llm/structured";
+import { stripCodeFence } from "@/lib/llm/json";
 
 /**
  * Contract for requirement-extraction output.
@@ -142,10 +143,4 @@ export function parseExtraction(raw: string, quotableText: string): ExtractionPa
   return { success: true, data: result.data };
 }
 
-/** Models often wrap JSON in a ```json fence despite instructions not to. */
-function stripCodeFence(raw: string): string {
-  const trimmed = raw.trim();
-  const fenced = /^```(?:json)?\s*\n([\s\S]*?)\n?```$/.exec(trimmed);
-  return fenced ? fenced[1] : trimmed;
-}
 

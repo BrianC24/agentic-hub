@@ -22,9 +22,15 @@ export interface StageRailProps {
  * readers, with the current stage marked via aria-current.
  */
 export function StageRail({ activeStage }: StageRailProps) {
-  const activeIndex = RAIL_STAGES.findIndex((s) => s.id === activeStage);
-  // A failed run has no position on the rail; nothing is marked complete.
-  const resolvedIndex = activeStage === "failed" ? -1 : activeIndex;
+  // Neither terminal stage appears on the rail, so both need handling:
+  // a completed run has finished every stage, while a failed one has no
+  // meaningful position and is shown with nothing marked.
+  const resolvedIndex =
+    activeStage === "complete"
+      ? RAIL_STAGES.length
+      : activeStage === "failed"
+        ? -1
+        : RAIL_STAGES.findIndex((s) => s.id === activeStage);
 
   return (
     <nav aria-label="Workflow stages">

@@ -1,41 +1,39 @@
 import { NextResponse } from "next/server";
 import { createAnthropicProvider, readLlmConfig } from "@/lib/llm/config";
 import { isSelectableModel, resolveModel } from "@/lib/llm/models";
-import { parseTicket } from "@/lib/ticket/schema";
-import type { RunArtifacts, WorkflowResult } from "@/lib/workflow/orchestrator";
 import { approveRun, replanAfterRejection } from "@/lib/workflow/replan";
-import type { Run } from "@/lib/workflow/run";
+import { newRunId, runStore } from "@/lib/workflow/store";
+import { summarizeTotals } from "@/lib/workflow/totals";
 
 /**
  * Records a human decision on a plan.
  *
+ * The caller supplies only a run id. The run, its artifacts, and its repair
+ * count are read from the server-side store, so the bound cannot be bypassed
+ * by a crafted request and no client-supplied text reaches the next prompt.
+ *
  * Approving is a pure state transition and costs nothing. Rejecting runs a
  * genuine replan with the reviewer's note as feedback, so it needs a live
- * provider — a recording cannot cover a round that only exists because a
+ * provider — a recording cannot cover a round that exists only because a
  * person asked for it.
  */
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-interface DecisionBody {
-  decision?: unknown;
-  note?: unknown;
-  ticket?: unknown;
-  run?: unknown;
-  artifacts?: unknown;
-  model?: unknown;
-}
+/** Bounds what a reviewer's note can add to the next prompt. */
+const MAX_NOTE_LENGTH = 2000;
 
 export async function POST(request: Request) {
-  let body: DecisionBody;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Request body must be JSON" }, { status: 400 });
   }
 
-  const decision = body.decision;
+  const payload = body as Record<string, unknown>;
+  const decision = payload.decision;
   if (decision !== "approved" && decision !== "rejected") {
     return NextResponse.json(
       { error: "decision must be 'approved' or 'rejected'" },
@@ -43,54 +41,46 @@ export async function POST(request: Request) {
     );
   }
 
-  const note = typeof body.note === "string" ? body.note.slice(0, 2000) : "";
+  const runId = payload.runId;
+  if (typeof runId !== "string" || runId.length === 0 || runId.length > 100) {
+    return NextResponse.json({ error: "runId is required" }, { status: 400 });
+  }
 
-  const parsedTicket = parseTicket(body.ticket);
-  if (!parsedTicket.success) {
+  const note = typeof payload.note === "string" ? payload.note.slice(0, MAX_NOTE_LENGTH) : "";
+
+  const stored = runStore.get(runId);
+  if (!stored) {
     return NextResponse.json(
-      { error: "Ticket failed validation", violations: parsedTicket.errors },
-      { status: 400 },
+      {
+        error:
+          "That run is no longer available. Runs are held in memory for 30 minutes and do not survive a restart — start a new run.",
+      },
+      { status: 404 },
     );
   }
 
-  // The run and artifacts come back from the client because there is no store.
-  // That is a real limitation, not a design choice — see the README. It is
-  // acceptable here only because nothing downstream trusts them: the workflow
-  // re-derives every conclusion from the model output it fetches.
-  const run = body.run as Run | undefined;
-  const artifacts = body.artifacts as RunArtifacts | undefined;
-  if (!run || !artifacts || run.stage !== "awaiting_approval") {
+  if (stored.run.stage !== "awaiting_approval") {
     return NextResponse.json(
-      { error: "A run awaiting approval must be supplied" },
-      { status: 400 },
+      { error: `This run is ${stored.run.stage}, so there is nothing to decide` },
+      { status: 409 },
     );
   }
 
   if (decision === "approved") {
-    const approved = approveRun(run, note);
-    const result: WorkflowResult = {
+    const approved = approveRun(stored.run, note);
+    // Terminal: drop it rather than leaving a decided run occupying the store.
+    runStore.delete(runId);
+    return NextResponse.json({
+      mode: "none",
+      // No model was called to approve, so there is nothing to attribute.
+      model: "—",
+      runId,
       run: approved,
-      artifacts,
-      totals: {
-        usage: artifacts.stageRuns.reduce(
-          (acc, r) => ({
-            inputTokens: acc.inputTokens + r.usage.inputTokens,
-            outputTokens: acc.outputTokens + r.usage.outputTokens,
-          }),
-          { inputTokens: 0, outputTokens: 0 },
-        ),
-        latencyMs: artifacts.stageRuns.reduce((acc, r) => acc + r.latencyMs, 0),
-        estimatedCostUsd: artifacts.stageRuns.reduce(
-          (acc, r) => (acc === null || r.estimatedCostUsd === null ? null : acc + r.estimatedCostUsd),
-          0 as number | null,
-        ),
-        modelCalls: artifacts.stageRuns.reduce((acc, r) => acc + r.attempts, 0),
-      },
-    };
-    return NextResponse.json({ mode: "none", model: "n/a", ...result });
+      artifacts: stored.artifacts,
+      totals: summarizeTotals(stored.artifacts.stageRuns),
+    });
   }
 
-  // Rejection means real work, which means a live provider.
   const config = readLlmConfig();
   if (config.provider !== "anthropic") {
     return NextResponse.json(
@@ -103,20 +93,33 @@ export async function POST(request: Request) {
     );
   }
 
-  if (body.model !== undefined && !isSelectableModel(body.model)) {
+  if (payload.model !== undefined && !isSelectableModel(payload.model)) {
     return NextResponse.json({ error: "Unsupported model" }, { status: 400 });
   }
 
   try {
-    const provider = createAnthropicProvider(process.env, resolveModel(body.model, config.model));
+    const provider = createAnthropicProvider(process.env, resolveModel(payload.model, config.model));
     const result = await replanAfterRejection({
       provider,
-      ticket: parsedTicket.ticket,
-      run,
-      artifacts,
+      // The ticket comes from the store too, so a decision cannot smuggle in a
+      // different ticket than the one the run was created from.
+      ticket: stored.ticket,
+      run: stored.run,
+      artifacts: stored.artifacts,
       note,
     });
-    return NextResponse.json({ mode: "live", model: provider.model, ...result });
+
+    const nextId = result.run.stage === "awaiting_approval" ? newRunId() : null;
+    if (nextId) {
+      runStore.save(nextId, {
+        run: result.run,
+        artifacts: result.artifacts,
+        ticket: stored.ticket,
+      });
+    }
+    runStore.delete(runId);
+
+    return NextResponse.json({ mode: "live", model: provider.model, runId: nextId, ...result });
   } catch (error) {
     console.error("Replan failed:", error);
     return NextResponse.json(

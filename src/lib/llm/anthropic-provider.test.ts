@@ -129,3 +129,32 @@ describe("toProviderError", () => {
     expect(toProviderError("boom").message).toBe("boom");
   });
 });
+
+describe("RecordingProvider", () => {
+  it("captures each request as it was at send time, not as it ended up", async () => {
+    // runStructured mutates one messages array in place across attempts. A
+    // stored reference made every exchange show the final conversation, which
+    // silently corrupted the request side of every recording.
+    const { RecordingProvider } = await import("./recording-provider");
+    const { runStructured } = await import("./structured");
+    const { MockProvider } = await import("./mock-provider");
+
+    const recorder = new RecordingProvider(
+      new MockProvider({ turns: [{ text: "not json" }, { text: '{"ok":true}' }] }),
+    );
+
+    await runStructured<{ ok: boolean }>({
+      provider: recorder,
+      system: "s",
+      prompt: "first turn",
+      parse: (raw) =>
+        raw.includes("ok")
+          ? { success: true, data: { ok: true } }
+          : { success: false, violations: [{ path: "x", message: "bad" }] },
+      buildRepairPrompt: () => "fix it",
+    });
+
+    expect(recorder.exchanges[0].request.messages).toHaveLength(1);
+    expect(recorder.exchanges[1].request.messages).toHaveLength(3);
+  });
+});
