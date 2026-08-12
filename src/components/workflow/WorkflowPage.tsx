@@ -30,6 +30,11 @@ export function WorkflowPage() {
   const [models, setModels] = useState<SelectableModel[]>([]);
   const [model, setModel] = useState(DEFAULT_SELECTABLE_MODEL);
   const [fixtureKey, setFixtureKey] = useState<string | null>(null);
+  const [limits, setLimits] = useState<{
+    dailyBudgetUsd?: number;
+    remainingBudgetUsd?: number;
+    liveRunsRemaining?: number;
+  }>({});
   const [deciding, setDeciding] = useState(false);
   const [decisionError, setDecisionError] = useState<string | null>(null);
 
@@ -41,6 +46,11 @@ export function WorkflowPage() {
         setLiveEnabled(Boolean(d.liveEnabled));
         setModels(d.models ?? []);
         if (d.defaultModel) setModel(d.defaultModel);
+        setLimits({
+          dailyBudgetUsd: d.dailyBudgetUsd,
+          remainingBudgetUsd: d.remainingBudgetUsd,
+          liveRunsRemaining: d.liveRunsRemaining,
+        });
       })
       .catch(() => setLiveEnabled(false));
   }, []);
@@ -177,6 +187,7 @@ export function WorkflowPage() {
           live={preferLive && liveEnabled}
           model={models.find((m) => m.id === model)}
           fixtureKey={fixtureKey}
+          limits={limits}
         />
 
         <TicketIntakeForm
@@ -224,10 +235,12 @@ function RunModeHint({
   live,
   model,
   fixtureKey,
+  limits,
 }: {
   live: boolean;
   model: SelectableModel | undefined;
   fixtureKey: string | null;
+  limits: { dailyBudgetUsd?: number; remainingBudgetUsd?: number; liveRunsRemaining?: number };
 }) {
   const replayable = fixtureKey !== null && hasRecording(fixtureKey);
 
@@ -236,7 +249,16 @@ function RunModeHint({
       <div className={styles.hint}>
         <strong>Live run.</strong> Calls {model?.label ?? "the model"} for real — about{" "}
         ${model?.approxRunCostUsd.toFixed(3) ?? "0.02"} and ~30s.
-        {model?.note ? ` ${model.note}` : ""}
+        {limits.liveRunsRemaining !== undefined && (
+          <>
+            {" "}
+            {limits.liveRunsRemaining} live run{limits.liveRunsRemaining === 1 ? "" : "s"} left for
+            you this hour
+            {limits.remainingBudgetUsd !== undefined &&
+              `, $${limits.remainingBudgetUsd.toFixed(2)} of today's $${limits.dailyBudgetUsd?.toFixed(2)} demo budget remaining`}
+            .
+          </>
+        )}
       </div>
     );
   }

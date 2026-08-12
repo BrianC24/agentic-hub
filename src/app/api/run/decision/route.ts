@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardLiveRun } from "@/lib/guardrails";
 import { createAnthropicProvider, readLlmConfig } from "@/lib/llm/config";
 import { isSelectableModel, resolveModel } from "@/lib/llm/models";
 import { approveRun, replanAfterRejection } from "@/lib/workflow/replan";
@@ -97,8 +98,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unsupported model" }, { status: 400 });
   }
 
+  // A replan is a live run and is guarded identically. Without this, rejection
+  // would be an unmetered way to spend the budget the run endpoint protects.
+  const replanModel = resolveModel(payload.model, config.model);
+  const guard = guardLiveRun(request, stored.ticket, replanModel);
+  if (!guard.ok) {
+    return NextResponse.json(
+      { error: guard.error },
+      {
+        status: guard.status,
+        headers: guard.retryAfterSeconds
+          ? { "Retry-After": String(guard.retryAfterSeconds) }
+          : undefined,
+      },
+    );
+  }
+
   try {
-    const provider = createAnthropicProvider(process.env, resolveModel(payload.model, config.model));
+    const provider = createAnthropicProvider(process.env, replanModel);
     const result = await replanAfterRejection({
       provider,
       // The ticket comes from the store too, so a decision cannot smuggle in a
@@ -108,6 +125,8 @@ export async function POST(request: Request) {
       artifacts: stored.artifacts,
       note,
     });
+
+    guard.settle(result.totals.estimatedCostUsd);
 
     const nextId = result.run.stage === "awaiting_approval" ? newRunId() : null;
     if (nextId) {
@@ -121,6 +140,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ mode: "live", model: provider.model, runId: nextId, ...result });
   } catch (error) {
+    guard.release();
     console.error("Replan failed:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Replan failed" },

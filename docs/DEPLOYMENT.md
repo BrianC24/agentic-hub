@@ -45,14 +45,34 @@ every run from any visitor.
 | `ANTHROPIC_API_KEY` | your key |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5` (seeds the picker) |
 
-Before doing this, understand the exposure: **there is no authentication and no
-rate limiting.** Anyone with the URL can trigger runs at roughly $0.02 each on
-Haiku, or $0.22 on Opus. The only real protection is the credit balance on the
-key, so keep auto-reload off and fund it with an amount you would not mind
-losing.
+Live runs are guarded, and the guards are on by default:
 
-A better shape, if live demoing matters: deploy replay-only in public, and run
-live locally when screen-sharing.
+| Guard | Default | Env var |
+|---|---|---|
+| Daily spend ceiling | $2 | `LIVE_DAILY_BUDGET_USD` |
+| Live runs per caller per hour | 5 | `LIVE_RUNS_PER_HOUR` |
+| Max estimated cost of one run | $0.05 (Haiku only) | `LIVE_MAX_RUN_COST_USD` |
+| Max ticket length for a live run | 6,000 chars | — |
+
+Budget is **reserved before the call and reconciled after**, so the request
+that would break the ceiling is refused rather than discovered afterwards. A
+refused request does not consume the caller's rate-limit quota.
+
+What these do not do, stated plainly:
+
+- **There is still no authentication.** Anyone with the URL can spend up to the
+  daily ceiling. The ceiling bounds the damage to an amount you chose; it does
+  not prevent the spending.
+- **The ledger and rate limiter are in-memory.** Across multiple serverless
+  instances each holds its own, so the effective ceiling is the configured
+  amount times the instance count. Low-traffic deployments usually run one
+  instance, but the only correct fix is shared storage.
+- **`x-forwarded-for` is only trustworthy behind a proxy that sets it.**
+  Without one, every caller collapses to a single shared quota — the safe
+  failure, but not per-caller fairness.
+
+Keep auto-reload off on the API key regardless. That balance is the last
+backstop and the only one outside this codebase.
 
 ## Timeouts
 

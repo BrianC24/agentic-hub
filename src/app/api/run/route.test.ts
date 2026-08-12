@@ -41,7 +41,7 @@ async function loadRoute() {
 describe("GET /api/run", () => {
   it("reports live disabled when no provider is configured", async () => {
     const { GET } = await loadRoute();
-    const body = await (await GET()).json();
+    const body = await (await GET(new Request("http://test/api/run"))).json();
 
     expect(body.liveEnabled).toBe(false);
     expect(Array.isArray(body.models)).toBe(true);
@@ -50,9 +50,12 @@ describe("GET /api/run", () => {
   it("reports live enabled once the provider is configured", async () => {
     process.env.LLM_PROVIDER = "anthropic";
     const { GET } = await loadRoute();
-    const body = await (await GET()).json();
+    const body = await (await GET(new Request("http://test/api/run"))).json();
 
     expect(body.liveEnabled).toBe(true);
+    // Limits are advertised so the UI can show them rather than surprise a visitor.
+    expect(body.dailyBudgetUsd).toBeGreaterThan(0);
+    expect(typeof body.liveRunsRemaining).toBe("number");
   });
 });
 

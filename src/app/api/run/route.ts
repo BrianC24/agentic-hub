@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardLiveRun, guardStatus } from "@/lib/guardrails";
 import { createAnthropicProvider, readLlmConfig } from "@/lib/llm/config";
 import { isSelectableModel, resolveModel, SELECTABLE_MODELS } from "@/lib/llm/models";
 import type { ModelProvider } from "@/lib/llm/types";
@@ -63,11 +64,32 @@ export async function POST(request: Request) {
   }
   const requestedModel = resolveModel(body.model, config.model);
 
+  let settle: ((actual: number | null) => void) | null = null;
+  let release: (() => void) | null = null;
+
   if (wantsLive && config.provider === "anthropic") {
+    // Every live guard in one place, checked before a provider exists so a
+    // refused request cannot reach the network.
+    const guard = guardLiveRun(request, parsed.ticket, requestedModel);
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.error },
+        {
+          status: guard.status,
+          headers: guard.retryAfterSeconds
+            ? { "Retry-After": String(guard.retryAfterSeconds) }
+            : undefined,
+        },
+      );
+    }
+    settle = guard.settle;
+    release = guard.release;
+
     try {
       provider = createAnthropicProvider(process.env, requestedModel);
       mode = "live";
     } catch (error) {
+      release();
       return NextResponse.json(
         { error: error instanceof Error ? error.message : "Provider unavailable" },
         { status: 503 },
@@ -90,6 +112,8 @@ export async function POST(request: Request) {
   try {
     const runId = newRunId();
     const result = await runWorkflow(provider, parsed.ticket, { runId });
+    // Reconcile the reservation against what the run actually cost.
+    settle?.(result.totals.estimatedCostUsd);
 
     // Only a run that can still be decided on is worth holding. Storing the
     // artifacts server-side is what keeps the repair bound enforceable — the
@@ -104,6 +128,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ mode, model: provider.model, runId, ...result });
   } catch (error) {
+    // The run never completed, so hand the held budget back rather than
+    // charging for calls that may not have happened.
+    release?.();
     // A thrown error here is a bug in the workflow, not a model failure —
     // model failures are represented as a failed run, not an exception.
     console.error("Workflow crashed:", error);
@@ -115,10 +142,12 @@ export async function POST(request: Request) {
 }
 
 /** Tells the client which modes this deployment actually supports. */
-export async function GET() {
+export async function GET(request: Request) {
   const config = readLlmConfig();
+  const live = config.provider === "anthropic";
   return NextResponse.json({
-    liveEnabled: config.provider === "anthropic",
+    liveEnabled: live,
+    ...(live ? guardStatus(request) : {}),
     model: config.model,
     models: SELECTABLE_MODELS,
     defaultModel: resolveModel(undefined, config.model),
