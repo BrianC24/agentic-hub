@@ -20,7 +20,7 @@ export interface ExtractOptions {
  * Runs requirement extraction with a bounded repair loop.
  *
  * Citations are checked against the ticket's own prose, so a quote the model
- * invented fails validation the same way a missing field would — and the
+ * invented fails validation the same way a missing field would, and the
  * repair turn tells it exactly which quote did not hold up.
  */
 export function extractRequirements(

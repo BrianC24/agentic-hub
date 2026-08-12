@@ -38,7 +38,7 @@ export interface EvalReport {
  * Runs the eval suite.
  *
  * Assertions are evaluated against whatever the workflow produced, including
- * partial output from a failed run — a case that fails early should report
+ * partial output from a failed run, because a case that fails early should report
  * which assertions it missed, not vanish from the report.
  */
 export async function runEvals(

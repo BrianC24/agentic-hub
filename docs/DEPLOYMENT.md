@@ -18,7 +18,7 @@ That is the whole process. `LLM_PROVIDER` defaults to `mock`, so:
   with no model picker.
 - A request asking for `mode: "live"` falls back to replay rather than erroring
   or spending.
-- Rejecting a plan — the one action that needs a live call — is refused with an
+- Rejecting a plan, the one action that needs a live call, is refused with an
   explanation.
 
 Verified against a production build with the environment stripped:
@@ -52,7 +52,7 @@ Live runs are guarded, and the guards are on by default:
 | Daily spend ceiling | $2 | `LIVE_DAILY_BUDGET_USD` |
 | Live runs per caller per hour | 5 | `LIVE_RUNS_PER_HOUR` |
 | Max estimated cost of one run | $0.05 (Haiku only) | `LIVE_MAX_RUN_COST_USD` |
-| Max ticket length for a live run | 6,000 chars | — |
+| Max ticket length for a live run | 6,000 chars | n/a |
 
 Budget is **reserved before the call and reconciled after**, so the request
 that would break the ceiling is refused rather than discovered afterwards. A
@@ -68,7 +68,7 @@ What these do not do, stated plainly:
   amount times the instance count. Low-traffic deployments usually run one
   instance, but the only correct fix is shared storage.
 - **`x-forwarded-for` is only trustworthy behind a proxy that sets it.**
-  Without one, every caller collapses to a single shared quota — the safe
+  Without one, every caller collapses to a single shared quota, which is the safe
   failure, but not per-caller fairness.
 
 Keep auto-reload off on the API key regardless. That balance is the last
@@ -78,12 +78,12 @@ backstop and the only one outside this codebase.
 
 Live runs take ~30s (Haiku) to ~100s (Opus) across three model calls. Both API
 routes declare `maxDuration = 120`. Vercel's Hobby tier caps serverless
-functions at 60s, so a live Opus run would be cut off there — another reason the
+functions at 60s, so a live Opus run would be cut off there, which is another reason the
 public deployment is replay-only.
 
 ## Currently deployed
 
-https://agentic-hub-mu.vercel.app — replay-only, no environment variables set. Verified live: all three
+https://agentic-hub-mu.vercel.app (replay-only, no environment variables set). Verified live: all three
 example tickets reach the approval gate, approval completes a run, and a
 request demanding live mode with Opus is refused.
 

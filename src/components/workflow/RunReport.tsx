@@ -54,8 +54,8 @@ export function RunReport({
         {reachedApproval
           ? "Plan ready for human approval"
           : isComplete
-            ? `Approved${run.approval?.note ? ` — ${run.approval.note}` : ""}`
-            : `Run ${run.stage}${run.failureReason ? ` — ${run.failureReason}` : ""}`}
+            ? `Approved${run.approval?.note ? `: ${run.approval.note}` : ""}`
+            : `Run ${run.stage}${run.failureReason ? `: ${run.failureReason}` : ""}`}
         <span className={styles.badge}>{mode}</span>
       </div>
 
@@ -135,7 +135,7 @@ export function RunReport({
       {artifacts.evaluation && (
         <Panel
           title="Rubric evaluation"
-          count={`avg ${artifacts.evaluation.averageScore.toFixed(2)} — ${
+          count={`avg ${artifacts.evaluation.averageScore.toFixed(2)}, ${
             artifacts.evaluation.passed ? "pass" : "below threshold"
           }`}
         >
@@ -163,7 +163,7 @@ export function RunReport({
             <span className={styles.traceDetail}>
               {stageRun.attempts > 1 ? (
                 <span className={styles.repaired}>
-                  {stageRun.attempts} attempts — repaired:{" "}
+                  {stageRun.attempts} attempts, repaired:{" "}
                   {stageRun.violations[0]?.message ?? "schema violation"}
                 </span>
               ) : (
@@ -196,7 +196,7 @@ export function RunReport({
  * The human gate.
  *
  * Approving ends the run. Rejecting sends the plan back to planning with the
- * reviewer's note as feedback — the same repair path a failed rubric score
+ * reviewer's  note as feedback, using the same repair path a failed rubric score
  * takes, except the instruction is written by a person.
  */
 function ApprovalGate({
@@ -218,7 +218,7 @@ function ApprovalGate({
           <label htmlFor="approval-note" className={styles.metricLabel}>
             Note {""}
             <span className={styles.checkDetail}>
-              — on rejection this is sent to the model as the instruction for the next plan
+              on rejection this is sent to the model as the instruction for the next plan
             </span>
           </label>
           <textarea
@@ -253,7 +253,7 @@ function ApprovalGate({
             </div>
           )}
           <div className={styles.checkDetail}>
-            Rejecting runs a real replan and costs a live model call. Decisions are not persisted —
+            Rejecting runs a real replan and costs a live model call. Decisions are not persisted,
             a refresh loses the run.
           </div>
         </div>

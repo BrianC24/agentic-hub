@@ -62,7 +62,7 @@ async function main() {
     const cost =
       run.totalEstimatedCostUsd === null ? "unknown" : `$${run.totalEstimatedCostUsd.toFixed(4)}`;
     console.log(
-      `${run.status} — ${run.attempts.length} attempt(s), ` +
+      `${run.status}: ${run.attempts.length} attempt(s), ` +
         `${run.totalUsage.inputTokens}in/${run.totalUsage.outputTokens}out, ` +
         `${run.totalLatencyMs}ms, ${cost}`,
     );
@@ -72,9 +72,9 @@ async function main() {
         console.log(
           `    attempt ${attempt.attempt}: ${attempt.outcome}` +
             (attempt.violations.length > 0
-              ? ` — ${attempt.violations.map((v) => `${v.path}: ${v.message}`).join("; ")}`
+              ? `: ${attempt.violations.map((v) => `${v.path}: ${v.message}`).join("; ")}`
               : "") +
-            (attempt.providerError ? ` — ${attempt.providerError}` : ""),
+            (attempt.providerError ? `: ${attempt.providerError}` : ""),
         );
       }
     }

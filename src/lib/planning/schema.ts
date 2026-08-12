@@ -42,7 +42,7 @@ export type PlanParseResult = StructuredParseResult<ImplementationPlan>;
 /**
  * Semantic rule: a step may only claim requirement ids that actually exist.
  *
- * Without this, a model can satisfy coverage checks by inventing ids — the
+ * Without this, a model can satisfy coverage checks by inventing ids, so the
  * plan looks complete and is not. Same class of failure as a fabricated quote.
  */
 function findUnknownRequirementIds(

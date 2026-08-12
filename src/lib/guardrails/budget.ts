@@ -3,7 +3,7 @@
  *
  * Enforced by reservation rather than measurement: an estimate is deducted
  * before the call, then reconciled against what the run actually cost. Checking
- * spend afterwards is too late — the request that breaks the budget has already
+ * spend afterwards is too late, because the request that breaks the budget has already
  * been paid for.
  *
  * In-memory, with the consequences stated rather than discovered: across

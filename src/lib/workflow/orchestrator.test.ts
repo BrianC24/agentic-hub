@@ -77,7 +77,7 @@ describe("runWorkflow", () => {
 
     const result = await runWorkflow(p, ticket);
 
-    // Approval is a human decision — the workflow must not self-approve.
+    // Approval is a human decision, and the workflow must not self-approve.
     expect(result.run.stage).not.toBe("complete");
     expect(result.run.approval).toBeNull();
   });
@@ -85,7 +85,7 @@ describe("runWorkflow", () => {
   it("replans when deterministic checks fail, without paying for evaluation", async () => {
     const p = provider([
       { text: requirementsJson },
-      // Schema-valid, but covers only the implied requirement — so explicit
+      // Schema-valid, but covers only the implied requirement, so explicit
       // requirement R1 is uncovered and the coverage check fails. An empty
       // testStrategy would not test this path: the schema rejects that first,
       // inside the planning stage's own repair loop.

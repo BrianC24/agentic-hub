@@ -7,7 +7,7 @@ import type { Run } from "./run";
  *
  * The client used to post the whole run and artifacts back when making an
  * approval decision, which meant the repair bound was enforced against a
- * number the caller controlled — sending repairRounds: 0 forever bought
+ * number the caller controlled. Sending repairRounds: 0 forever bought
  * unlimited replans, and the artifacts fed straight into the next prompt.
  * Holding the state here and handing out only an opaque id closes both.
  *

@@ -94,7 +94,7 @@ describe("validatePlan", () => {
 
     expect(text).toContain("verified");
     expect(text).toContain("R2");
-    // Warnings must not appear — they are not what the repair should chase.
+    // Warnings must not appear, because they are not what the repair should chase.
     expect(text).not.toContain("traces back");
   });
 });

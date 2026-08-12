@@ -1,7 +1,7 @@
 /**
  * Replays saved recordings through the current validator.
  *
- * Free — no model calls. Run this after tightening a schema to see whether
+ * Free, with no model calls. Run this after tightening a schema to see whether
  * previously-passing model output would still pass, without paying to find out.
  *
  * Usage: npx tsx scripts/revalidate-recordings.ts
@@ -30,13 +30,13 @@ async function main() {
     const record = JSON.parse(await readFile(path.join(RECORDINGS_DIR, file), "utf8"));
     const fixture = getTicketFixture(record.fixtureKey);
     if (!fixture) {
-      console.log(`SKIP  ${file} — unknown fixture "${record.fixtureKey}"`);
+      console.log(`SKIP  ${file}: unknown fixture "${record.fixtureKey}"`);
       continue;
     }
 
     const raw = record.run?.attempts?.[0]?.raw;
     if (typeof raw !== "string") {
-      console.log(`SKIP  ${file} — no raw output recorded`);
+      console.log(`SKIP  ${file}: no raw output recorded`);
       continue;
     }
 
@@ -46,7 +46,7 @@ async function main() {
       console.log(`PASS  ${record.fixtureKey} (${record.model})`);
     } else {
       failed += 1;
-      console.log(`FAIL  ${record.fixtureKey} (${record.model}) — ${result.violations.length} violation(s)`);
+      console.log(`FAIL  ${record.fixtureKey} (${record.model}): ${result.violations.length} violation(s)`);
       for (const violation of result.violations) {
         console.log(`        ${violation.path}: ${violation.message}`);
       }

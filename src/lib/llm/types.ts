@@ -26,7 +26,7 @@ export interface ModelUsage {
 }
 
 export interface ModelResponse {
-  /** Raw text. Untrusted — always validate before use. */
+  /** Raw text. Untrusted, so always validate before use. */
   text: string;
   usage: ModelUsage;
   /** Model that actually served the response, which may differ from the one requested. */

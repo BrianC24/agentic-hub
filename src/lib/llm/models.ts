@@ -5,7 +5,7 @@ import { MODEL_PRICING } from "./cost";
  *
  * This is an allowlist, not a suggestion list. The API route validates against
  * it, because letting a request name an arbitrary model string would hand a
- * caller control over spend — a single crafted request could select the most
+ * caller control over spend, because a single crafted request could select the most
  * expensive model available.
  */
 export interface SelectableModel {
@@ -17,7 +17,7 @@ export interface SelectableModel {
 }
 
 /**
- * Costs are measured, not extrapolated — one full workflow run each on the
+ * Costs are measured, not extrapolated. One full workflow run each on the
  * same ticket, 2026-08-11.
  *
  * The spread is wider than per-token pricing suggests: Opus is 5x Haiku per
@@ -43,7 +43,7 @@ export const SELECTABLE_MODELS: SelectableModel[] = [
     id: "claude-opus-5",
     label: "Opus 5",
     approxRunCostUsd: 0.22,
-    note: "Measured 13x Haiku and ~98s per run — thinking is on by default and counts toward output.",
+    note: "Measured 13x Haiku and ~98s per run. Thinking is on by default and counts toward output.",
   },
 ];
 
@@ -61,7 +61,7 @@ export function getSelectableModel(id: string): SelectableModel | undefined {
  * Resolves which model a run should use.
  *
  * Precedence: an explicit request, then the configured ANTHROPIC_MODEL, then
- * the built-in default. The middle step matters — without it the env var would
+ * the built-in default. The middle step matters, because without it the env var would
  * govern the CLI scripts while the web UI silently ignored it. A configured
  * model that is off the allowlist (a preview model, a typo) is not inherited.
  */

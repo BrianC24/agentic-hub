@@ -65,7 +65,7 @@ export function buildQuotableText(ticket: {
  * Checks that every explicit requirement's sourceQuote really appears in the
  * ticket.
  *
- * This is a semantic rule the schema cannot express — the shape is valid either
+ * This is a semantic rule the schema cannot express, since the shape is valid either
  * way, and only comparison against the source reveals a fabricated citation.
  * Constrained decoding would not catch it either, which is precisely why the
  * repair loop needs to exist.
@@ -98,7 +98,7 @@ function findQuoteViolations(
       violations.push({
         path: `impliedRequirements.${index}.sourceQuote`,
         message:
-          "An implied requirement must not cite a sourceQuote — if the ticket states it, it is explicit",
+          "An implied requirement must not cite a sourceQuote. If the ticket states it, it is explicit",
       });
     }
   });

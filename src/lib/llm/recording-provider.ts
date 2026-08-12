@@ -38,8 +38,8 @@ export class RecordingProvider implements ModelProvider {
 /**
  * Replays recorded responses in order, making no network calls.
  *
- * This is what lets the public demo run the genuine workflow — the same
- * orchestrator, validators, and state machine — at zero cost and with no key.
+ * This is what lets the public demo run  the genuine workflow, with the same
+ * orchestrator, validators, and state machine, at zero cost and with no key.
  * Only the transport is swapped.
  */
 export class ReplayProvider implements ModelProvider {

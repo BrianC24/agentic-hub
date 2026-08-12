@@ -36,7 +36,7 @@ ${criteria}`;
 
 /**
  * The repair turn. The model sees its own invalid output plus the specific
- * validation failures — that error context is what makes the retry more than a
+ * validation failures, and that error context is what makes the retry more than a
  * reroll of the same prompt.
  */
 export function buildRepairPrompt(violations: SchemaViolation[]): string {

@@ -115,7 +115,7 @@ describe("RateLimiter", () => {
     expect(limiter.check("ip").allowed).toBe(false);
 
     // At t=1001 the hit at 0 has aged out but the one at 500 has not, so
-    // exactly one slot frees up — not the whole quota, as a fixed window
+    // exactly one slot frees up, not the whole quota, as a fixed window
     // would have granted.
     now = 1001;
     expect(limiter.check("ip").allowed).toBe(true);

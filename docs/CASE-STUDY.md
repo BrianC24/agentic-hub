@@ -9,7 +9,7 @@ Teams shipping AI features hit the same wall: the model works in the demo and is
 The failures are structural, not linguistic:
 
 - Output is prose when the system needs data.
-- Plausible output passes review that correct output would also pass — the two are indistinguishable by reading.
+- Plausible output passes review that correct output would also pass, because the two are indistinguishable by reading.
 - "Is this any good" has no answer without a rubric and a threshold.
 - Nobody knows what a run cost, how often it retried, or which stage burned the tokens.
 
@@ -17,7 +17,7 @@ This project builds the layer that answers those questions, using ticket-to-impl
 
 ## Goals and constraints
 
-**Goal:** demonstrate a control plane — bounded loops, structured-output validation, deterministic and model-based evaluation, cost and latency tracing, human approval — with credible evidence that each part works.
+**Goal:** demonstrate a control plane (bounded loops, structured-output validation, deterministic and model-based evaluation, cost and latency tracing, human approval) with credible evidence that each part works.
 
 **Constraints:**
 
@@ -46,7 +46,7 @@ Every stage returns JSON validated against a Zod schema. That catches shape. It 
 
 **Verbatim quote checking.** Extraction must cite a `sourceQuote` for every explicit requirement, and that quote must actually appear in the ticket. Comparison collapses whitespace and ignores case, so a quote spanning a line break still passes; anything looser stops catching invention, which is the point.
 
-**Requirement id checking.** A plan step may only cite requirement ids that exist. Without it, a model can manufacture coverage by inventing ids — the plan passes the coverage check and is hollow.
+**Requirement id checking.** A plan step may only cite requirement ids that exist. Without it, a model can manufacture coverage by inventing ids, so the plan passes the coverage check and is hollow.
 
 Both are failure classes that constrained decoding cannot catch, because the output is structurally perfect. That is the argument for having a repair loop at all.
 
@@ -60,19 +60,19 @@ What is left genuinely needs judgement: is the approach sound, does it invent co
 
 Checks run **before** the judge. A plan already known to be short should not cost an evaluation call.
 
-One design decision worth naming: the judge must score every criterion exactly once. Without that rule a model can silently omit the criterion it would score badly, and the average improves for free — structurally valid, semantically dishonest, and invisible unless you check.
+One design decision worth naming: the judge must score every criterion exactly once. Without that rule a model can silently omit the criterion it would score badly, and the average improves for free. Structurally valid, semantically dishonest, and invisible unless you check.
 
 ## What the real runs changed
 
 Everything up to this point was built against a mock whose responses I had *guessed*. The first live run invalidated part of that guess immediately.
 
-**Finding 1: the repair loop fires, and my prompt was why.** In 3 of 3 runs, planning returned step ids as numbers rather than strings. The loop behaved exactly as designed — violations fed back, retry succeeded — but the honest reading is that the prompt declared the field without its type and invited the error. Fixing the prompt removed an entire model call per run: −25% calls, −32% cost, −20% latency, and rubric scores went *up* (4.20 → 4.53).
+**Finding 1: the repair loop fires, and my prompt was why.** In 3 of 3 runs, planning returned step ids as numbers rather than strings. The loop behaved exactly as designed, feeding violations back so the retry succeeded, but the honest reading is that the prompt declared the field without its type and invited the error. Fixing the prompt removed an entire model call per run: −25% calls, −32% cost, −20% latency, and rubric scores went *up* (4.20 → 4.53).
 
 The tempting alternative was to coerce numbers to strings in the schema. That would have hidden the defect and kept paying for the extra call forever.
 
-**Finding 2: `clarificationNeeded` cannot be trusted as a gate.** It came back `true` for all three fixtures, including the well-specified one, so the first conclusion was "the model over-flags." A later recording set had it discriminate correctly, which makes the real property nondeterminism rather than bias — see the code-review section below for how that conclusion had to be revised. Explicit-requirement count is used as the discriminator instead, and nothing gates on the flag.
+**Finding 2: `clarificationNeeded` cannot be trusted as a gate.** It came back `true` for all three fixtures, including the well-specified one, so the first conclusion was "the model over-flags." A later recording set had it discriminate correctly, which makes the real property nondeterminism rather than bias. See the code-review section below for how that conclusion had to be revised. Explicit-requirement count is used as the discriminator instead, and nothing gates on the flag.
 
-**Finding 3: an assertion that passed vacuously.** The coverage assertion checked that the requirement-coverage check "did not fail" — which is trivially true on a run that never reached validation. It now requires the check to have run *and* passed. An eval that passes when nothing ran is worse than no eval.
+**Finding 3: an assertion that passed vacuously.** The coverage assertion checked that the requirement-coverage check "did not fail", which is trivially true on a run that never reached validation. It now requires the check to have run *and* passed. An eval that passes when nothing ran is worse than no eval.
 
 **Finding 4: replan rate is not a stable number.** Two consecutive full eval runs each had exactly one replan, but on *different* cases. Quoting a single run's replan rate as a property of the system would be wrong.
 
@@ -84,7 +84,7 @@ invisible from the outside.
 **A spend vector in the approval path.** The decision endpoint cast client
 input rather than validating it, and enforced the repair bound against a
 number the caller supplied. A forged run with `repairRounds: -9999` was
-accepted and made real billable calls — which falsified this project's own
+accepted and made real billable calls, which falsified this project's own
 claim that no path runs unbounded. The instructive part is that the obvious
 fix is insufficient: validating the shape still lets a client send
 `repairRounds: 0` on every request. The state had to move server-side, with
@@ -93,12 +93,12 @@ the caller holding only an opaque id.
 **Corrupted recordings.** Both providers stored request objects by reference
 while the repair loop mutates a single `messages` array in place, so every
 recorded exchange showed the *final* conversation rather than what was sent at
-that point. Replay still worked, because only responses are replayed — which
+that point. Replay still worked, because only responses are replayed, which
 is exactly why it went unnoticed. It had quietly corrupted the request side of
 the published evidence.
 
 **A blank stage rail.** `complete` is not a stage on the rail, so approving a
-run made every stage render as pending — the progress indicator emptied at the
+run made every stage render as pending, so the progress indicator emptied at the
 precise moment the user finished.
 
 Re-recording after the fixes also corrected a finding: `clarificationNeeded`
@@ -117,13 +117,13 @@ Two mechanisms, deliberately distinguished because conflating them hides what is
 | Feedback | The specific validation errors | Failed checks, or weak rubric criteria with evidence |
 | Bound | 2 repairs per stage | 2 rounds per run |
 
-Every loop is bounded three ways: attempt ceiling, early exit on success, and immediate abort on a non-retryable provider error. Retryable provider errors deliberately do *not* consume repair budget — transport retry is a different concern with its own backoff policy, and spending schema-repair budget on a rate limit would be wrong.
+Every loop is bounded three ways: attempt ceiling, early exit on success, and immediate abort on a non-retryable provider error. Retryable provider errors deliberately do *not* consume repair budget. Transport retry is a different concern with its own backoff policy, and spending schema-repair budget on a rate limit would be wrong.
 
 Writing the orchestrator surfaced a missing transition: failed deterministic checks had no path back to planning. The state machine threw rather than letting a run into an impossible state, which is the entire argument for modelling transitions as data instead of scattering booleans.
 
 ## Human approval
 
-The workflow stops at `awaiting_approval` and does not complete itself. Rejection is modelled as a loop back to planning, not a terminal failure — a rejected plan is feedback, not the end of the run.
+The workflow stops at `awaiting_approval` and does not complete itself. Rejection is modelled as a loop back to planning, not a terminal failure, because a rejected plan is feedback rather than the end of the run.
 
 The decision is recorded for the session only. There is no persistence, and the UI says so rather than implying otherwise.
 
@@ -137,7 +137,7 @@ Full eval suite: 7 cases, 23 model calls, ~240s, $0.148 on Haiku. Roughly 10× t
 
 ## Approaches rejected
 
-**Constrained decoding for structured output.** Would eliminate shape violations — and would also have eliminated the repair loop, which is the thing worth demonstrating. More substantively, it cannot catch the semantic failures (fabricated quotes, invented ids) that motivated the loop in the first place. Worth adding later as an optimisation *alongside* the loop, not instead of it.
+**Constrained decoding for structured output.** Would eliminate shape violations, and would also have eliminated the repair loop, which is the thing worth demonstrating. More substantively, it cannot catch the semantic failures (fabricated quotes, invented ids) that motivated the loop in the first place. Worth adding later as an optimisation *alongside* the loop, not instead of it.
 
 **An LLM judge for requirement coverage.** Rejected on principle. It is set arithmetic.
 
@@ -147,7 +147,7 @@ Full eval suite: 7 cases, 23 model calls, ~240s, $0.148 on Haiku. Roughly 10× t
 
 ## Known limitations
 
-It plans work, it does not write code — no repository access, no execution, no PR. Runs are not persisted. Tested on one model family. The rubric threshold is uncalibrated against human raters. Seven eval cases catch gross regressions, not fine quality differences. Replay covers three tickets. Cost figures are list-price estimates, not billed amounts.
+It plans work, it does not write code. No repository access, no execution, no PR. Runs are not persisted. Tested on one model family. The rubric threshold is uncalibrated against human raters. Seven eval cases catch gross regressions, not fine quality differences. Replay covers three tickets. Cost figures are list-price estimates, not billed amounts.
 
 ## What would change at production scale
 

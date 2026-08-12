@@ -59,7 +59,7 @@ export function configWarnings(env: LlmEnv = process.env): string[] {
 
   if (raw !== undefined && raw !== "mock" && raw !== "anthropic") {
     warnings.push(
-      `LLM_PROVIDER is "${raw}", which is not recognised — expected exactly "anthropic" (lowercase) or "mock". Falling back to mock, so live calls are disabled.`,
+      `LLM_PROVIDER is "${raw}", which is not recognised. Expected exactly "anthropic" (lowercase) or "mock". Falling back to mock, so live calls are disabled.`,
     );
   }
 
@@ -70,7 +70,7 @@ export function configWarnings(env: LlmEnv = process.env): string[] {
   const model = env.ANTHROPIC_MODEL?.trim();
   if (model && !isSelectableModel(model)) {
     warnings.push(
-      `ANTHROPIC_MODEL is "${model}", which is not on the allowlist — the default will be used instead.`,
+      `ANTHROPIC_MODEL is "${model}", which is not on the allowlist, so the default will be used instead.`,
     );
   }
 
@@ -96,7 +96,7 @@ export function createAnthropicProvider(
 ): ModelProvider {
   const { model: configuredModel } = readLlmConfig(env);
   // Callers may override the model, but the API route only passes values that
-  // cleared the allowlist — an unvalidated string must never reach here.
+  // cleared the allowlist. An unvalidated string must never reach here.
   const model = modelOverride ?? configuredModel;
   const apiKey = env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) {

@@ -18,7 +18,7 @@ export interface AnthropicProviderOptions {
  *
  * Deliberately thin: it maps our provider-agnostic request/response shape onto
  * the SDK and classifies errors. No prompt construction, no retry logic, no
- * validation — those belong to the workflow, not the transport.
+ * validation. Those belong to the workflow, not the transport.
  */
 export class AnthropicProvider implements ModelProvider {
   readonly name = "anthropic";
@@ -36,7 +36,7 @@ export class AnthropicProvider implements ModelProvider {
   /**
    * Built on first use, not in the constructor: the SDK throws when it cannot
    * resolve a key, and constructing at module load would crash the app for
-   * anyone running without one — including a fresh clone of the repo.
+   * anyone running without one, including a fresh clone of the repo.
    */
   private getClient(): Anthropic {
     if (!this.client) {
@@ -62,7 +62,7 @@ export class AnthropicProvider implements ModelProvider {
     }
 
     // Safety classifiers can decline with a successful HTTP 200. Check this
-    // before reading content — on a refusal, content is empty or partial.
+    // before reading content, because on a refusal, content is empty or partial.
     if (message.stop_reason === "refusal") {
       throw new ModelProviderError(
         `Model refused the request${

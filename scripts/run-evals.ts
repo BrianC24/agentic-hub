@@ -7,7 +7,7 @@
  * Usage:
  *   LLM_PROVIDER=anthropic npx tsx scripts/run-evals.ts [case-key]
  *
- * Costs real money — roughly $0.02 per case on claude-haiku-4-5.
+ * Costs real money, roughly $0.02 per case on claude-haiku-4-5.
  */
 
 import { mkdir, writeFile } from "node:fs/promises";

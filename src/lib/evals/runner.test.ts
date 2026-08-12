@@ -39,7 +39,7 @@ describe("eval suite over recordings", () => {
 describe("runEvals failure handling", () => {
   it("records a provider failure as a failed run, not a crash", async () => {
     // The orchestrator converts provider errors into a failed run rather than
-    // letting them escape, so the suite sees a result — not an exception.
+    // letting them escape, so the suite sees a result, not an exception.
     const report = await runEvals(
       () => new MockProvider({ turns: [] }),
       EVAL_CASES.slice(0, 2),

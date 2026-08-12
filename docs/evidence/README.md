@@ -7,7 +7,7 @@ before/after is reproducible rather than asserted.
 
 Full workflow runs on `claude-haiku-4-5` where the planning stage returned step
 `id` values as numbers instead of strings. The schema rejected every one and the
-repair loop recovered each time — 4 model calls per run instead of 3.
+repair loop recovered each time, at 4 model calls per run instead of 3.
 
 Look at `exchanges[1].response.text` in any of these: the first planning attempt
 contains `"id": 1`.
@@ -33,4 +33,4 @@ LLM_PROVIDER=anthropic npx tsx scripts/run-evals.ts   # ~$0.15
 ```
 
 Recordings are point-in-time. A prompt or schema change makes them stale by
-design — that is what `revalidate-recordings.ts` is for.
+design, and that is what `revalidate-recordings.ts` is for.

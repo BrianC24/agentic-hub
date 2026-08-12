@@ -14,7 +14,7 @@ export interface RunTotals {
  *
  * Previously duplicated across the orchestrator, the replan path, and the
  * decision route, which meant three reducers that could disagree about what a
- * run cost — and the report would show whichever one happened to produce it.
+ * run cost, and the report would show whichever one happened to produce it.
  */
 export function summarizeTotals(stageRuns: StageRunRecord[]): RunTotals {
   return {

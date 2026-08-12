@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AnthropicProvider, toProviderError } from "./anthropic-provider";
 import { ModelProviderError } from "./types";
 
-/** Minimal stand-in for the SDK client — only `messages.create` is used. */
+/** Minimal stand-in for the SDK client: only `messages.create` is used. */
 function clientReturning(message: unknown): Anthropic {
   return {
     messages: { create: vi.fn().mockResolvedValue(message) },

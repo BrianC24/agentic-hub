@@ -189,7 +189,7 @@ export function WorkflowPage() {
         {state.status === "running" && (
           <div className={styles.running} role="status">
             <span className={styles.spinner} aria-hidden="true" />
-            Running the workflow — extraction, planning, checks, and evaluation.
+            Running the workflow: extraction, planning, checks, and evaluation.
             {preferLive && liveEnabled && " Live calls take around 30 seconds."}
           </div>
         )}
@@ -237,7 +237,7 @@ function RunModeHint({
   if (live) {
     return (
       <div className={styles.hint}>
-        <strong>Live run.</strong> Calls {model?.label ?? "the model"} for real — about{" "}
+        <strong>Live run.</strong> Calls {model?.label ?? "the model"} for real, about{" "}
         ${model?.approxRunCostUsd.toFixed(3) ?? "0.02"} and ~30s.
         {limits.liveRunsRemaining !== undefined && (
           <>
@@ -256,7 +256,7 @@ function RunModeHint({
   if (replayable) {
     return (
       <div className={styles.hint}>
-        <strong>Replay run.</strong> Uses recorded responses for this example — free and instant.
+        <strong>Replay run.</strong> Uses recorded responses for this example, so it is free and instant.
         The workflow itself runs for real; only the transport is swapped.
       </div>
     );

@@ -52,7 +52,7 @@ describe("replayed workflows", () => {
     );
 
     // Explicit-requirement count tracks the acceptance criteria actually
-    // present, so it discriminates. clarificationNeeded does not — see below.
+    // present, so it discriminates. clarificationNeeded does not. See below.
     expect(clear.artifacts.requirements!.explicitRequirements.length).toBeGreaterThan(
       ambiguous.artifacts.requirements!.explicitRequirements.length,
     );
@@ -63,7 +63,7 @@ describe("replayed workflows", () => {
     // Measured twice on claude-haiku-4-5 with different results: one recording
     // set returned true for all three tickets including the well-specified
     // one; a later set discriminated correctly. It is a model judgement call,
-    // not a reliable signal, so nothing gates on it — this test exists to stop
+    // not a reliable signal, so nothing gates on it, and this test exists to stop
     // anyone wiring it into a gate later.
     const results = await Promise.all(
       ["clear-feature-request", "ambiguous-ticket", "missing-acceptance-criteria"].map((key) =>

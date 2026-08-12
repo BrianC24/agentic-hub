@@ -62,12 +62,12 @@ export async function replanAfterRejection(input: ReplanInput): Promise<Workflow
     const failed = transition(
       input.run,
       "failed",
-      "Repair budget exhausted — too many rejected plans for one run",
+      "Repair budget exhausted: too many rejected plans for one run",
     );
     return finish(failed, artifacts);
   }
 
-  // Rejection is modelled as a loop back to planning, not a terminal failure —
+  // Rejection is modelled as a loop back to planning, not a terminal failure,
   // a rejected plan is feedback.
   let run = recordApproval(input.run, "rejected", note);
 

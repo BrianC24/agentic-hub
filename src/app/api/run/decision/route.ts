@@ -15,7 +15,7 @@ import { summarizeTotals } from "@/lib/workflow/totals";
  *
  * Approving is a pure state transition and costs nothing. Rejecting runs a
  * genuine replan with the reviewer's note as feedback, so it needs a live
- * provider — a recording cannot cover a round that exists only because a
+ * provider, because a recording cannot cover a round that exists only because a
  * person asked for it.
  */
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "That run is no longer available. Runs are held in memory for 30 minutes and do not survive a restart — start a new run.",
+          "That run is no longer available. Runs are held in memory for 30 minutes and do not survive a restart. Start a new run.",
       },
       { status: 404 },
     );
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       mode: "none",
       // No model was called to approve, so there is nothing to attribute.
-      model: "—",
+      model: "n/a",
       runId,
       run: approved,
       artifacts: stored.artifacts,
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       {
         error:
           "Rejecting a plan triggers a genuine replan, which needs live model calls. " +
-          "This deployment runs on recordings only — a recording cannot cover a round that exists because a reviewer asked for it.",
+          "This deployment runs on recordings only, and a recording cannot cover a round that exists because a reviewer asked for it.",
       },
       { status: 409 },
     );

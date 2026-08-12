@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     settle?.(result.totals.estimatedCostUsd);
 
     // Only a run that can still be decided on is worth holding. Storing the
-    // artifacts server-side is what keeps the repair bound enforceable — the
+    // artifacts server-side is what keeps the repair bound enforceable, because the
     // client never gets to tell us how many rounds it has already used.
     if (result.run.stage === "awaiting_approval") {
       runStore.save(runId, {
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     // The run never completed, so hand the held budget back rather than
     // charging for calls that may not have happened.
     release?.();
-    // A thrown error here is a bug in the workflow, not a model failure —
+    // A thrown error here is a bug in the workflow, not a model failure,
     // model failures are represented as a failed run, not an exception.
     console.error("Workflow crashed:", error);
     return NextResponse.json(

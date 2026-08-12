@@ -24,7 +24,7 @@ const ORIGINAL_ENV = { ...process.env };
 
 beforeEach(() => {
   vi.resetModules();
-  // Default to a keyless deployment — the configuration a public deploy uses.
+  // Default to a keyless deployment, the configuration a public deploy uses.
   delete process.env.LLM_PROVIDER;
   delete process.env.ANTHROPIC_API_KEY;
   delete process.env.ANTHROPIC_MODEL;
@@ -59,7 +59,7 @@ describe("GET /api/run", () => {
   });
 });
 
-describe("POST /api/run — input validation", () => {
+describe("POST /api/run: input validation", () => {
   it("rejects a non-JSON body", async () => {
     const { POST } = await loadRoute();
     const response = await POST(
@@ -88,7 +88,7 @@ describe("POST /api/run — input validation", () => {
   });
 });
 
-describe("POST /api/run — provider selection", () => {
+describe("POST /api/run: provider selection", () => {
   it("serves a replay when a recording exists", async () => {
     const { POST } = await loadRoute();
     const body = await (
@@ -130,7 +130,7 @@ describe("POST /api/run — provider selection", () => {
   });
 });
 
-describe("POST /api/run — run handle", () => {
+describe("POST /api/run: run handle", () => {
   it("issues an unguessable run id for a run awaiting approval", async () => {
     const { POST } = await loadRoute();
     const body = await (

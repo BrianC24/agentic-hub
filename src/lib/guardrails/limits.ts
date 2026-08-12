@@ -6,7 +6,7 @@ import type { Ticket } from "@/lib/ticket/schema";
  *
  * Ticket length is an input-cost control: the ticket goes into every prompt in
  * the run, so a large one is paid for three times over. The domain schema
- * deliberately stays permissive — this is a policy about what a public
+ * deliberately stays permissive, because this is a policy about what a public
  * deployment will spend, not a claim about what a valid ticket is.
  */
 

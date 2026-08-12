@@ -45,7 +45,7 @@ async function createRun(): Promise<string> {
   return body.runId;
 }
 
-describe("POST /api/run/decision — refusing forged state", () => {
+describe("POST /api/run/decision: refusing forged state", () => {
   it("ignores a run object supplied by the caller", async () => {
     // The original exploit: a forged run with a negative repair count bought
     // unlimited replans, because the bound was checked against client input.
@@ -102,7 +102,7 @@ describe("POST /api/run/decision — refusing forged state", () => {
   });
 });
 
-describe("POST /api/run/decision — approval", () => {
+describe("POST /api/run/decision: approval", () => {
   it("completes the run and records the note", async () => {
     const runId = await createRun();
     const { POST } = await import("./route");
@@ -132,7 +132,7 @@ describe("POST /api/run/decision — approval", () => {
   });
 });
 
-describe("POST /api/run/decision — rejection", () => {
+describe("POST /api/run/decision: rejection", () => {
   it("refuses to replan on a deployment with no live provider", async () => {
     const runId = await createRun();
     const { POST } = await import("./route");

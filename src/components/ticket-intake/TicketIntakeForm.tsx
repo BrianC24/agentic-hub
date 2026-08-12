@@ -190,7 +190,7 @@ export function TicketIntakeForm({
               onChange={(e) => editField("acceptanceCriteria", e.target.value)}
             />
             <span className={styles.hint}>
-              Optional — an empty list is a valid, if incomplete, ticket. Requirement extraction
+              Optional. An empty list is a valid, if incomplete, ticket. Requirement extraction
               flags the gap.
             </span>
           </div>
@@ -268,7 +268,7 @@ function IntakeResult({ state }: { state: IntakeState }) {
       <div className={`${styles.summary} ${styles.summaryError}`} role="alert">
         <div className={styles.summaryHead}>
           <span className={styles.statusDot} aria-hidden="true" />
-          Ticket failed validation — {state.errors.length}{" "}
+          Ticket failed validation: {state.errors.length}{" "}
           {state.errors.length === 1 ? "issue" : "issues"}
         </div>
         <div className={styles.summaryBody}>
@@ -289,7 +289,7 @@ function IntakeResult({ state }: { state: IntakeState }) {
     <div className={`${styles.summary} ${styles.summarySuccess}`} role="status">
       <div className={styles.summaryHead}>
         <span className={styles.statusDot} aria-hidden="true" />
-        Intake complete — schema valid
+        Intake complete, schema valid
       </div>
       <div className={styles.summaryBody}>
         <pre className={styles.payload}>{JSON.stringify(state.ticket, null, 2)}</pre>

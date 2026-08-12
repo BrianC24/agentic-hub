@@ -7,7 +7,7 @@ export interface TicketFixture {
   ticket: Ticket;
 }
 
-// Fictional product ("Northwind Boards") and reporters — no real company data.
+// Fictional product ("Northwind Boards") and reporters. No real company data.
 export const TICKET_FIXTURES: TicketFixture[] = [
   {
     key: "clear-feature-request",

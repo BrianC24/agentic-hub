@@ -1,8 +1,8 @@
 /**
  * The rubric for model-based plan evaluation.
  *
- * Every criterion here requires judgement. Anything objectively decidable —
- * requirement coverage, presence of a test strategy, unmitigated risks —
+ * Every criterion here requires judgement. Anything objectively decidable, such as
+ * requirement coverage, presence of a test strategy, or unmitigated risks,
  * belongs in the deterministic checks instead, and is deliberately absent.
  *
  * Scores are 1–5 with stated meanings, because an unanchored 1–10 scale

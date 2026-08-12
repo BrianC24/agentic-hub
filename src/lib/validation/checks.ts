@@ -16,7 +16,7 @@ export interface CheckResult {
   id: string;
   label: string;
   status: CheckStatus;
-  /** What was actually observed — shown in the run report, not just pass/fail. */
+  /** What was actually observed, shown in the run report, not just pass/fail. */
   detail: string;
 }
 
@@ -80,7 +80,7 @@ function checkStepsPresent(plan: ImplementationPlan): CheckResult {
   };
 }
 
-/** A step claiming no requirements may be scope creep — worth flagging, not failing. */
+/** A step claiming no requirements may be scope creep, so it is worth flagging without failing. */
 function checkNoOrphanSteps(plan: ImplementationPlan): CheckResult {
   const orphans = plan.steps.filter((s) => s.addressesRequirements.length === 0);
   return {
@@ -120,7 +120,7 @@ function checkAmbiguitiesAcknowledged(
   };
 }
 
-/** Every risk needs a mitigation — a risk list with none is decoration. */
+/** Every risk needs a mitigation, because a risk list with none is decoration. */
 function checkRisksMitigated(plan: ImplementationPlan): CheckResult {
   const unmitigated = plan.risks.filter((r) => r.mitigation.trim().length === 0);
   return {

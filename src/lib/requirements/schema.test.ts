@@ -26,7 +26,7 @@ function extraction(overrides: Record<string, unknown> = {}) {
   });
 }
 
-describe("parseExtraction — structural", () => {
+describe("parseExtraction: structural", () => {
   it("accepts well-formed output with a genuine quote", () => {
     const result = parseExtraction(extraction(), TICKET_TEXT);
     expect(result.success).toBe(true);
@@ -46,7 +46,7 @@ describe("parseExtraction — structural", () => {
   });
 });
 
-describe("parseExtraction — verbatim quote rule", () => {
+describe("parseExtraction: verbatim quote rule", () => {
   it("rejects a fabricated quote that never appears in the ticket", () => {
     const raw = extraction({
       explicitRequirements: [
@@ -68,7 +68,7 @@ describe("parseExtraction — verbatim quote rule", () => {
   });
 
   it("rejects a paraphrase of real ticket text", () => {
-    // Every word appears in the ticket, but not in this order — the failure
+    // Every word appears in the ticket, but not in this order, and the failure
     // mode a schema check cannot see.
     const raw = extraction({
       explicitRequirements: [

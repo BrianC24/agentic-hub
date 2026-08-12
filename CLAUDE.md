@@ -4,9 +4,9 @@
 
 ## Purpose
 
-This repository is an AI software-delivery harness and evaluation platform. It accepts a Jira-style engineering ticket and moves it through a visible, controlled workflow — ticket intake, requirement extraction, clarification/escalation, repository analysis, planning, implementation, deterministic validation, LLM-based evaluation, repair loop, human approval, and a final run report.
+This repository is an AI software-delivery harness and evaluation platform. It accepts a Jira-style engineering ticket and moves it through a visible, controlled workflow: ticket intake, requirement extraction, clarification/escalation, repository analysis, planning, implementation, deterministic validation, LLM-based evaluation, repair loop, human approval, and a final run report.
 
-The project must demonstrate production-quality engineering and genuine understanding of AI systems. It is not a generic chatbot, a tutorial clone, or a collection of AI-generated features. The interface should make agent behavior inspectable — what happened, why, what failed, what was retried, and what the run cost.
+The project must demonstrate production-quality engineering and genuine understanding of AI systems. It is not a generic chatbot, a tutorial clone, or a collection of AI-generated features. The interface should make agent behavior inspectable, showing what happened, why, what failed, what was retried, and what the run cost.
 
 ## Architecture Principles
 

@@ -40,7 +40,7 @@ export interface StructuredAttempt {
 export interface StructuredRun<T> {
   status: "success" | "failed";
   data: T | null;
-  /** Set when status is "failed" — why the loop gave up. */
+  /** Set when status is "failed": why the loop gave up. */
   failureReason: "retries_exhausted" | "provider_error" | null;
   attempts: StructuredAttempt[];
   totalUsage: ModelUsage;
@@ -119,7 +119,7 @@ export async function runStructured<T>(options: StructuredRunOptions<T>): Promis
       });
 
       // A retryable provider error could justify another attempt, but that is a
-      // transport concern with its own backoff policy — not this loop's job.
+      // transport concern with its own backoff policy, not this loop's job.
       // Either way the loop stops rather than burning repair budget on it.
       const retryable = error instanceof ModelProviderError && error.retryable;
       if (!retryable || attempt === maxAttempts) {

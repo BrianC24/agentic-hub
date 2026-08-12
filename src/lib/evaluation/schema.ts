@@ -7,7 +7,7 @@ import { stripCodeFence } from "@/lib/llm/json";
  * Contract for a rubric evaluation.
  *
  * Each criterion carries a score *and* written evidence, because a bare number
- * is unreviewable — a human cannot tell a considered 4 from a lazy one.
+ * is unreviewable, because a human cannot tell a considered 4 from a lazy one.
  */
 
 export const CriterionScoreSchema = z.object({

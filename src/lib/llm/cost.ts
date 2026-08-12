@@ -27,7 +27,7 @@ export function getPricing(model: string): ModelPricing | undefined {
 
 /**
  * Estimated cost in USD. Returns null for an unpriced model rather than
- * guessing — an unknown cost must render as "unknown", never as $0.00.
+ * guessing, because an unknown cost must render as "unknown", never as $0.00.
  */
 export function estimateCostUsd(model: string, usage: ModelUsage): number | null {
   const pricing = getPricing(model);

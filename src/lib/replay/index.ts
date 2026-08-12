@@ -7,8 +7,8 @@ import missingAcceptanceCriteria from "./recordings/missing-acceptance-criteria.
  * Replay mode.
  *
  * The recordings are real responses captured from claude-haiku-4-5. Replaying
- * them runs the genuine workflow — same orchestrator, validators, state
- * machine, and scoring — with only the transport swapped, so a public demo
+ * them runs the genuine workflow, with the same orchestrator, validators, state
+ * machine, and scoring, and only the transport swapped, so a public demo
  * costs nothing and needs no API key.
  *
  * Derived artefacts are deliberately not stored: the workflow recomputes

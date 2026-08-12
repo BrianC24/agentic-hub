@@ -6,7 +6,7 @@
  * boundary.
  *
  * In-memory, with the same multi-instance caveat as the spend ledger. It is a
- * speed bump against casual abuse, not a defence against a determined actor —
+ * speed bump against casual abuse, not a defence against a determined actor,
  * the spend ceiling is what actually bounds the damage.
  */
 
@@ -82,7 +82,7 @@ export class RateLimiter {
  * `x-forwarded-for` is only trustworthy because the hosting platform sets it;
  * the left-most entry is the original client. On a deployment without such a
  * proxy this header is spoofable, so every caller collapsing to "unknown" is
- * the safe failure — they share one quota rather than each getting their own.
+ * the safe failure, where they share one quota rather than each getting their own.
  */
 export function clientKey(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");

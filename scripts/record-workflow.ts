@@ -79,7 +79,7 @@ async function main() {
         console.log(
           `  ! ${stageRun.stage} round ${stageRun.round}: ${stageRun.attempts} attempt(s), ${stageRun.status}` +
             (stageRun.violations.length
-              ? ` — ${stageRun.violations.map((v) => `${v.path}: ${v.message}`).join("; ")}`
+              ? `: ${stageRun.violations.map((v) => `${v.path}: ${v.message}`).join("; ")}`
               : ""),
         );
       }

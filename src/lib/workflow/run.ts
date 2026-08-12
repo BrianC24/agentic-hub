@@ -25,7 +25,7 @@ const ALLOWED_TRANSITIONS: Record<RunStage, readonly RunStage[]> = {
   intake: ["requirements", "failed"],
   requirements: ["planning", "failed"],
   planning: ["validation", "failed"],
-  // Deterministic checks can send a plan back before a judge ever sees it —
+  // Deterministic checks can send a plan back before a judge ever sees it,
   // there is no point paying to evaluate a plan already known to be short.
   validation: ["evaluation", "planning", "failed"],
   // Evaluation can loop back to planning: that is the repair path for a plan
