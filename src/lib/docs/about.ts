@@ -58,7 +58,7 @@ export const PROJECT_PITCH = {
     "I've shipped AI features in production, and the hard part was never the model call. It was knowing whether I could trust what came back, and being able to show someone else why.",
     "So I built the layer that answers that. Bounded loops, output checked against a schema with a repair path when it fails, plain code checks for anything you can verify objectively, an LLM judge only where you actually need judgment, and cost and latency tracked on every run.",
     "It also stops and waits for a person before anything gets approved. That gate is deliberate. When a model can produce something plausible faster than anyone can check it, verification is the actual work, and the human sitting there is the last thing standing between a half-thought-out plan and a shipped feature. My job upstream is to make that review fast and specific instead of a gut call.",
-    "Turning tickets into plans is just the setting. The harness is the point.",
+    "I picked ticket-to-plan because it's a real task with an output you can actually check, not because the world needs another one of these. The harness around the model call is the part I wanted to build.",
   ],
 } as const;
 
