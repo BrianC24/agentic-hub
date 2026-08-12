@@ -113,6 +113,15 @@ Stated limitations of the judge are in `src/lib/evaluation/rubric.ts`: it judges
 
 **Secrets.** Keys live in `.env.local` (gitignored); `.env.example` documents the variables with no values.
 
+## How it works
+
+A `/how-it-works` page in the app walks through each stage: what it produces, the
+specific failure it prevents, verifiable evidence, and a link to the source that
+implements it. Its numbers are imported from the modules that define them —
+the rubric criteria, repair bounds, and pricing table are read from code rather
+than restated — and a test asserts every file it references still exists, so a
+stale reference fails CI instead of being discovered by a reader.
+
 ## Deploying
 
 Deploy with **no environment variables** and it runs replay-only: the genuine

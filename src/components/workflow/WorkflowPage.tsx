@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TopBar } from "@/components/nav/TopBar";
 import { TicketIntakeForm } from "@/components/ticket-intake/TicketIntakeForm";
 import { StageRail } from "@/components/workflow/StageRail";
 import { RunReport } from "@/components/workflow/RunReport";
@@ -126,48 +127,37 @@ export function WorkflowPage() {
 
   return (
     <div className={styles.shell}>
-      <header className={styles.topbar}>
-        <div className={styles.topbarInner}>
-          <span className={styles.mark} aria-hidden="true">
-            AH
-          </span>
-          <span className={styles.wordmark}>Agentic Hub</span>
-          <div className={styles.topbarMeta}>
-            {liveEnabled ? (
-              <>
-                <label className={styles.modeToggle}>
-                  <input
-                    type="checkbox"
-                    checked={preferLive}
-                    onChange={(e) => setPreferLive(e.target.checked)}
-                  />
-                  Live model calls
-                </label>
-                <label className={styles.modelPicker}>
-                  <span className="sr-only">Model</span>
-                  <select
-                    value={model}
-                    disabled={!preferLive}
-                    onChange={(e) => setModel(e.target.value)}
-                    title={
-                      models.find((m) => m.id === model)?.note ??
-                      "Model used for live runs"
-                    }
-                  >
-                    {models.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.label} · ~${m.approxRunCostUsd.toFixed(3)}/run
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </>
-            ) : (
-              <span>Replay mode</span>
-            )}
-          </div>
-        </div>
-      </header>
+      <TopBar>
+        {liveEnabled ? (
+          <>
+            <label className={styles.modeToggle}>
+              <input
+                type="checkbox"
+                checked={preferLive}
+                onChange={(e) => setPreferLive(e.target.checked)}
+              />
+              Live model calls
+            </label>
+            <label className={styles.modelPicker}>
+              <span className="sr-only">Model</span>
+              <select
+                value={model}
+                disabled={!preferLive}
+                onChange={(e) => setModel(e.target.value)}
+                title={models.find((m) => m.id === model)?.note ?? "Model used for live runs"}
+              >
+                {models.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label} · ~${m.approxRunCostUsd.toFixed(3)}/run
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        ) : (
+          <span>Replay mode</span>
+        )}
+      </TopBar>
 
       <main className={styles.main}>
         <StageRail activeStage={activeStage} />
