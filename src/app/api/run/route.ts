@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { guardLiveRun, guardStatus } from "@/lib/guardrails";
-import { createAnthropicProvider, readLlmConfig } from "@/lib/llm/config";
+import { configWarnings, createAnthropicProvider, readLlmConfig } from "@/lib/llm/config";
 import { isSelectableModel, resolveModel, SELECTABLE_MODELS } from "@/lib/llm/models";
 import type { ModelProvider } from "@/lib/llm/types";
 import { createReplayProvider, hasRecording } from "@/lib/replay";
@@ -145,8 +145,10 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   const config = readLlmConfig();
   const live = config.provider === "anthropic";
+  const warnings = configWarnings();
   return NextResponse.json({
     liveEnabled: live,
+    ...(warnings.length > 0 ? { configWarnings: warnings } : {}),
     ...(live ? guardStatus(request) : {}),
     model: config.model,
     models: SELECTABLE_MODELS,

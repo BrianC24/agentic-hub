@@ -1,4 +1,5 @@
 import { AnthropicProvider } from "./anthropic-provider";
+import { isSelectableModel } from "./models";
 import type { ModelProvider } from "./types";
 
 /**
@@ -42,6 +43,38 @@ export function readLlmConfig(env: LlmEnv = process.env): LlmConfig {
     provider,
     model: env.ANTHROPIC_MODEL?.trim() || DEV_MODEL,
   };
+}
+
+/**
+ * Explains why live mode is off, when the configuration suggests it was meant
+ * to be on.
+ *
+ * Falling back to mock is the safe default, but doing it silently turns a
+ * one-character mistake into an unexplained deployment. Each message says what
+ * was seen and what to change; none of them echo the key.
+ */
+export function configWarnings(env: LlmEnv = process.env): string[] {
+  const warnings: string[] = [];
+  const raw = env.LLM_PROVIDER;
+
+  if (raw !== undefined && raw !== "mock" && raw !== "anthropic") {
+    warnings.push(
+      `LLM_PROVIDER is "${raw}", which is not recognised — expected exactly "anthropic" (lowercase) or "mock". Falling back to mock, so live calls are disabled.`,
+    );
+  }
+
+  if (raw === "anthropic" && !env.ANTHROPIC_API_KEY?.trim()) {
+    warnings.push("LLM_PROVIDER is anthropic but ANTHROPIC_API_KEY is empty or unset.");
+  }
+
+  const model = env.ANTHROPIC_MODEL?.trim();
+  if (model && !isSelectableModel(model)) {
+    warnings.push(
+      `ANTHROPIC_MODEL is "${model}", which is not on the allowlist — the default will be used instead.`,
+    );
+  }
+
+  return warnings;
 }
 
 export class MissingApiKeyError extends Error {
