@@ -293,3 +293,12 @@
     gap: 0.625rem;
   }
 }
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  color: var(--fg-muted);
+  font-size: 0.875rem;
+  max-width: 42rem;
+}

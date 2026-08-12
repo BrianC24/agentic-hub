@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { TopBar } from "@/components/nav/TopBar";
 import {
+  ARCHITECTURE,
   BOUNDS,
   FINDINGS,
   JUDGE_LIMITATIONS,
@@ -56,6 +57,45 @@ export default function HowItWorks() {
         <section className={styles.section}>
           <div className={styles.diagram}>
             <pre>{FLOW}</pre>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h2 className={styles.sectionTitle}>What kind of system this is</h2>
+            <p className={styles.sectionLede}>
+              <strong>{ARCHITECTURE.claim}</strong> The distinction is one question — who decides
+              what happens next, your code or the model?
+            </p>
+          </div>
+          <div className={styles.prose}>
+            {ARCHITECTURE.body.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>This system</th>
+                  <th>An agent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ARCHITECTURE.contrasts.map((row) => (
+                  <tr key={row.dimension}>
+                    <td>{row.dimension}</td>
+                    <td className={styles.wrapCell}>{row.workflow}</td>
+                    <td className={styles.wrapCell}>{row.agent}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className={styles.callout}>
+            <strong>{ARCHITECTURE.handoff.heading}. </strong>
+            {ARCHITECTURE.handoff.body}
           </div>
         </section>
 

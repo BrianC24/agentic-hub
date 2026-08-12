@@ -111,6 +111,54 @@ export const STAGES: WalkthroughStage[] = [
   },
 ];
 
+export interface ArchitectureContrast {
+  dimension: string;
+  workflow: string;
+  agent: string;
+}
+
+/**
+ * The frame everything else hangs on.
+ *
+ * Without it a reader assumes this is an agent, which inverts the point: the
+ * properties worth demonstrating — bounded execution, an inspectable trace,
+ * replayable runs — all come from the model *not* directing its own process.
+ */
+export const ARCHITECTURE = {
+  claim: "A workflow, not an agent.",
+  body: [
+    "The control flow is TypeScript. The model is never given tools, never chooses what happens next, and never decides it is finished. It is asked three questions, and every answer is validated before the next one is asked.",
+    "Each call is a fresh conversation. Planning knows about requirements because the orchestrator renders the validated requirements into the planning prompt as structured data — not because anything is remembered between calls.",
+  ],
+  contrasts: [
+    {
+      dimension: "Who sequences the work",
+      workflow: "Your code, decided before the run starts",
+      agent: "The model, decided during the run",
+    },
+    {
+      dimension: "Tools",
+      workflow: "None. It returns text and nothing else.",
+      agent: "Calls them at will — read, write, search, execute",
+    },
+    {
+      dimension: "Termination",
+      workflow: "The state machine reaches a terminal stage",
+      agent: "The model decides it is done",
+    },
+    {
+      dimension: "What the trace looks like",
+      workflow: "A state machine you can draw in advance",
+      agent: "A transcript you read afterwards to find out what happened",
+    },
+  ] as ArchitectureContrast[],
+  /** Where the deterministic half ends and an autonomous one would begin. */
+  handoff: {
+    heading: "Where an agent would come in",
+    body: "Writing the code. That genuinely cannot be specified in advance — you cannot predict which files need reading, how many edits it takes, or what a failing test will turn out to mean, and termination is \"the tests pass\", which has to be discovered. So the natural architecture is a workflow up to approval and an agent after it, with the human gate sitting exactly on that seam: it is the last cheap moment before an expensive, unpredictable process starts. That half is not built, and the run report says so.",
+  },
+} as const;
+
 export interface RepairMechanism {
   name: string;
   trigger: string;
