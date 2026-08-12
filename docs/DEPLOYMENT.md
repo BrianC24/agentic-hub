@@ -81,6 +81,12 @@ routes declare `maxDuration = 120`. Vercel's Hobby tier caps serverless
 functions at 60s, so a live Opus run would be cut off there — another reason the
 public deployment is replay-only.
 
+## Currently deployed
+
+https://agentic-hub-mu.vercel.app — replay-only, no environment variables set. Verified live: all three
+example tickets reach the approval gate, approval completes a run, and a
+request demanding live mode with Opus is refused.
+
 ## After deploying
 
 - Confirm `GET /api/run` reports `liveEnabled: false`.

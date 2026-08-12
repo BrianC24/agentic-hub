@@ -1,5 +1,7 @@
 # Agentic Hub
 
+**[Live demo](https://agentic-hub-mu.vercel.app)** · **[How it works](https://agentic-hub-mu.vercel.app/how-it-works)** · **[About](https://agentic-hub-mu.vercel.app/about)**
+
 An AI software-delivery harness. It takes a Jira-style engineering ticket and moves it through a bounded, inspectable workflow — requirement extraction, implementation planning, deterministic validation, rubric-based evaluation, and a human approval gate — recording every model call's tokens, latency, and cost.
 
 The model call is not the interesting part. The interesting part is everything that decides whether to trust it.
@@ -138,7 +140,7 @@ npm run lint
 npm run build
 ```
 
-No API key needed. The app runs in replay mode against real recorded responses — the genuine workflow with only the transport swapped, so the orchestrator, validators, state machine, and scoring all execute for real.
+No API key needed — the [deployed demo](https://agentic-hub-mu.vercel.app) runs the same way. The app runs in replay mode against real recorded responses — the genuine workflow with only the transport swapped, so the orchestrator, validators, state machine, and scoring all execute for real.
 
 ### Live model calls
 
