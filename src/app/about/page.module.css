@@ -1,0 +1,236 @@
+.main {
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+/* --- hero --- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.name {
+  font-size: 2rem;
+  font-weight: 660;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.roleLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+}
+
+.focus {
+  color: var(--accent);
+  font-weight: 550;
+}
+
+.dot {
+  color: var(--fg-subtle);
+}
+
+.summary {
+  color: var(--fg-muted);
+  max-width: 40rem;
+}
+
+.availability {
+  font-size: 0.8125rem;
+  color: var(--fg);
+  background: var(--accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius);
+  padding: 0.6rem 0.85rem;
+  align-self: flex-start;
+}
+
+/* --- contact --- */
+
+.contactRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.contact {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  padding: 0.42rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--fg);
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.contact:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.contactPrimary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+.contactPrimary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--accent-fg);
+}
+
+.contactLabel {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.contactValue {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+/* --- sections --- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 620;
+  letter-spacing: -0.015em;
+}
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+  max-width: 40rem;
+}
+
+.prose strong {
+  color: var(--fg);
+}
+
+/* --- roles --- */
+
+.role {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.roleHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.company {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.roleTitle {
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+.period {
+  margin-left: auto;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
+.highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.highlight {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.bullet {
+  color: var(--fg-subtle);
+  flex: 0 0 auto;
+}
+
+/* --- chips --- */
+
+.skillGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.skillLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-subtle);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.chip {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--fg-muted);
+}
+
+.skillStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding: 1.5rem 1rem 4rem;
+    gap: 2rem;
+  }
+
+  .name {
+    font-size: 1.6rem;
+  }
+
+  .period {
+    margin-left: 0;
+  }
+}
